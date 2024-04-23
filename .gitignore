@@ -88,3 +88,5 @@ bin
 .vscode/
 
 mmstudio/out/production/main/license.txt
+mmstudio/out/production/main/org/micromanager/data/internal/multipagetiff/README.txt
+mmstudio/out/
