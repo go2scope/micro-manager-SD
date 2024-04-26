@@ -9,6 +9,7 @@ import mmcorej.org.json.JSONException;
 import mmcorej.org.json.JSONObject;
 import org.micromanager.data.*;
 import org.micromanager.data.internal.*;
+import org.micromanager.internal.MMStudio;
 import org.micromanager.internal.propertymap.NonPropertyMapJSONFormats;
 import org.micromanager.internal.utils.ReportingUtils;
 
@@ -40,7 +41,7 @@ public class MMCStorageAdapter implements Storage {
     * @param amInWriteMode Whether we are writing
     * @throws IOException Close to inevitable with data storage
     */
-   public MMCStorageAdapter(Datastore store, CMMCore mmc, String dir, Boolean amInWriteMode)
+   public MMCStorageAdapter(Datastore store, String dir, Boolean amInWriteMode)
            throws IOException {
       // We must be notified of changes in the Datastore before everyone else,
       // so that others can read those changes out of the Datastore later.
@@ -50,9 +51,11 @@ public class MMCStorageAdapter implements Storage {
       this.store.setSavePath(dir);
       this.store.setName(new File(dir).getName());
 
-      mmcStorage = mmc;
+      // TODO: figure out prefix vs. parent directory
+
+      mmcStorage = MMStudio.getInstance().getCMMCore();
       if (!amInWriteMode) {
-         dsHandle = mmcStorage.acqLoadDatastore(dir);
+         dsHandle = mmcStorage.loadDataset(dir, store.getName());
       }
 
    }
@@ -108,9 +111,7 @@ public class MMCStorageAdapter implements Storage {
             throw new RuntimeException("Problem with summary metadata");
          }
          Consumer<String> debugLogger = s -> ReportingUtils.logDebugMessage(s);
-         storage_ = new NDTiffStorage(store.getSavePath(), store.getName(),
-                 jsonSummary, 0, 0, false, 0,
-                 SAVING_QUEUE_SIZE, debugLogger, false);
+         dsHandle = mmcStorage.createDataset(store.getSavePath(), store.getName(), );
          try {
             summaryMetadata = DefaultSummaryMetadata.fromPropertyMap(
                      NonPropertyMapJSONFormats.summaryMetadata().fromJSON(
