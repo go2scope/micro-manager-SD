@@ -167,7 +167,7 @@ public final class AcqControlDlg extends JFrame implements PropertyChangeListene
    private final NumberFormat numberFormat_;
    private JRadioButton singleButton_;
    private JRadioButton multiButton_;
-   private JRadioButton ndtiffButton_;
+   private JRadioButton mmcAPIButton_;
    private JCheckBox stackKeepShutterOpenCheckBox_;
    private JCheckBox chanKeepShutterOpenCheckBox_;
    private AcqOrderMode[] acqOrderModes_;
@@ -1019,7 +1019,8 @@ public final class AcqControlDlg extends JFrame implements PropertyChangeListene
       });
       savePanel_.add(multiButton_, "spanx, split");
 
-
+      // NOTE: Replaced NDTIFF with MMCStorage for the proof of concept
+      /*
       ndtiffButton_ = new JRadioButton("NDTiff");
       ndtiffButton_.setFont(DEFAULT_FONT);
       ndtiffButton_.addActionListener(e -> {
@@ -1027,7 +1028,17 @@ public final class AcqControlDlg extends JFrame implements PropertyChangeListene
                  Datastore.SaveMode.ND_TIFF);
          applySettingsFromGUI();
       });
-      savePanel_.add(ndtiffButton_, "spanx, split");
+      */
+
+      mmcAPIButton_ = new JRadioButton("MMCAPI");
+      mmcAPIButton_.setFont(DEFAULT_FONT);
+      mmcAPIButton_.addActionListener(e -> {
+         DefaultDatastore.setPreferredSaveMode(mmStudio_,
+                 Datastore.SaveMode.MMC_API);
+         applySettingsFromGUI();
+      });
+
+      savePanel_.add(mmcAPIButton_, "spanx, split");
 
       JButton helpButton = new JButton();
       helpButton.setText("<HTML><font color=\"#70A3CC\" size = \"3\">Which to use?</font></HTML>");
@@ -1059,15 +1070,15 @@ public final class AcqControlDlg extends JFrame implements PropertyChangeListene
       ButtonGroup buttonGroup = new ButtonGroup();
       buttonGroup.add(singleButton_);
       buttonGroup.add(multiButton_);
-      buttonGroup.add(ndtiffButton_);
+      buttonGroup.add(mmcAPIButton_);
 
       Datastore.SaveMode mode = mmStudio_.data().getPreferredSaveMode();
       if (mode == Datastore.SaveMode.SINGLEPLANE_TIFF_SERIES) {
          singleButton_.setSelected(true);
       } else if (mode == Datastore.SaveMode.MULTIPAGE_TIFF) {
          multiButton_.setSelected(true);
-      } else if (mode == Datastore.SaveMode.ND_TIFF) {
-         ndtiffButton_.setSelected(true);
+      } else if (mode == Datastore.SaveMode.MMC_API) {
+         mmcAPIButton_.setSelected(true);
       } else {
          ReportingUtils.logError("Unrecognized save mode " + mode);
       }
@@ -1384,8 +1395,8 @@ public final class AcqControlDlg extends JFrame implements PropertyChangeListene
             singleButton_.setSelected(true);
          } else if (sequenceSettings.saveMode() == Datastore.SaveMode.MULTIPAGE_TIFF) {
             multiButton_.setSelected(true);
-         } else if (sequenceSettings.saveMode() == Datastore.SaveMode.ND_TIFF) {
-            ndtiffButton_.setSelected(true);
+         } else if (sequenceSettings.saveMode() == Datastore.SaveMode.MMC_API) {
+            mmcAPIButton_.setSelected(true);
          }
 
          // update summary
@@ -1811,8 +1822,8 @@ public final class AcqControlDlg extends JFrame implements PropertyChangeListene
       } else if (multiButton_.isSelected()) {
          DefaultDatastore.setPreferredSaveMode(mmStudio_,
                  Datastore.SaveMode.MULTIPAGE_TIFF);
-      } else if (ndtiffButton_.isSelected()) {
-         DefaultDatastore.setPreferredSaveMode(mmStudio_, Datastore.SaveMode.ND_TIFF);
+      } else if (mmcAPIButton_.isSelected()) {
+         DefaultDatastore.setPreferredSaveMode(mmStudio_, Datastore.SaveMode.MMC_API);
       } else {
          ReportingUtils.logError(
                "Unknown save mode button or no save mode buttons selected");

@@ -1,12 +1,8 @@
 package org.micromanager.data.internal.mmcstore;
 
 import com.google.common.eventbus.Subscribe;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import mmcorej.CMMCore;
-import mmcorej.TaggedImage;
-import mmcorej.org.json.JSONException;
-import mmcorej.org.json.JSONObject;
+import mmcorej.LongVector;
 import org.micromanager.data.*;
 import org.micromanager.data.internal.*;
 import org.micromanager.internal.MMStudio;
@@ -16,12 +12,7 @@ import org.micromanager.internal.utils.ReportingUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.Stream;
-
 
 /**
  * Implements Storage on MMCore storage device.
@@ -30,8 +21,9 @@ public class MMCStorageAdapter implements Storage {
 
    private CMMCore mmcStorage;
    private final DefaultDatastore store;
-   private SummaryMetadata summaryMetadata = (new DefaultSummaryMetadata.Builder()).build();
+   private SummaryMetadata summaryMetadata;
    private String dsHandle = "";
+   private String dataPath;
 
    /**
     * Constructor of the MMCStorageAdapter.
@@ -53,9 +45,12 @@ public class MMCStorageAdapter implements Storage {
 
       // TODO: figure out prefix vs. parent directory
 
+      // get instance of mmcore
       mmcStorage = MMStudio.getInstance().getCMMCore();
+
+      // if we are not creating a new dataset, load the existing one
       if (!amInWriteMode) {
-         dsHandle = mmcStorage.loadDataset(dir, store.getName());
+         dsHandle = mmcStorage.loadDataset(new File(dir).getParent(), store.getName());
       }
 
    }
@@ -86,6 +81,7 @@ public class MMCStorageAdapter implements Storage {
 
    /**
     * Will be called when the event bus signals that there are new Summary Metadata.
+    * New summary metadata may not have any effect on the storage.
     *
     * @param event The event gives access to the new SummaryMetadata.
     */
@@ -95,108 +91,84 @@ public class MMCStorageAdapter implements Storage {
    }
 
    /**
-    * This is quite strange.  Only when we have SummaryMetadata, we can create the
-    * Storage.
+    * Sets summary metadata for the dataset
     *
     * @param summary To push to the storage.
     */
    public void setSummaryMetadata(SummaryMetadata summary) {
-      try {
-         String summaryMDString = NonPropertyMapJSONFormats.summaryMetadata().toJSON(
-                 ((DefaultSummaryMetadata) summary).toPropertyMap());
-         JSONObject jsonSummary;
-         try {
-            jsonSummary = new JSONObject(summaryMDString);
-         } catch (JSONException e) {
-            throw new RuntimeException("Problem with summary metadata");
-         }
-         Consumer<String> debugLogger = s -> ReportingUtils.logDebugMessage(s);
-         dsHandle = mmcStorage.createDataset(store.getSavePath(), store.getName(), );
-         try {
-            summaryMetadata = DefaultSummaryMetadata.fromPropertyMap(
-                     NonPropertyMapJSONFormats.summaryMetadata().fromJSON(
-                              storage_.getSummaryMetadata().toString()));
-         } catch (IOException e) {
-            throw new RuntimeException(e);
-         }
-      } catch (Exception e) {
-         ReportingUtils.logError(e, "Error setting new summary metadata");
+     if (!dsHandle.isEmpty())
+        throw new IllegalStateException("Cannot set summary metadata after dataset is created");
+      summaryMetadata = summary;
+      Coords coordinates = summaryMetadata.getIntendedDimensions();
+      if (coordinates == null) {
+         throw new RuntimeException("Summary metadata must have intended dimensions");
       }
+
+      // create an array of intended dimensions
+      LongVector dimensions = new LongVector();
+      for (String axis : coordinates.getAxes()) {
+         dimensions.add(coordinates.getIndex(axis));
+      }
+      String summaryMDString = NonPropertyMapJSONFormats.summaryMetadata().toJSON(
+                 ((DefaultSummaryMetadata) summary).toPropertyMap());
+      dsHandle = mmcStorage.createDataset(new File(store.getSavePath()).getParent(), store.getName(), dimensions,
+              summaryMDString);
    }
 
    @Override
    public void freeze() throws IOException {
-      mmcStorage.acqCloseDataset(dsHandle);
+      mmcStorage.closeDataset(dsHandle);
       store.unregisterForEvents(this);
    }
 
    @Override
    public void putImage(Image image) throws IOException {
-      if (storage_ == null) {
-         setSummaryMetadata(DefaultSummaryMetadata.getStandardSummaryMetadata());
-      }
-      if (summaryMetadata != null) {
-         ImageSizeChecker.checkImageSizeInSummary(summaryMetadata, image);
+      int pixelDepth = image.getBytesPerPixel();
+      int width = image.getHeight();
+      int height = image.getWidth();
+
+      if (dsHandle.isEmpty()) {
+         throw new RuntimeException("Cannot put image before dataset is created");
       }
       boolean rgb = image.getNumComponents() > 1;
-      HashMap<String, Object> axes = coordsToHashMap(image.getCoords());
+      if (rgb) {
+         throw new RuntimeException("RGB images are not supported");
+      }
+      Coords coords = image.getCoords();
 
-      //TODO: This is getting the JSON metadata as a String, and then converting it into
-      // A JSONObject again, and then it gets converted to string again in NDTiffStorage
-      // Certainly inefficient, possibly performance limitiing depending on which
-      // Thread this is called on.
+      LongVector coordinates = new LongVector();
+      for (String axis : coords.getAxes()) {
+         coordinates.add(coords.getIndex(axis));
+      }
+
       String mdString = NonPropertyMapJSONFormats.metadata().toJSON(
               ((DefaultMetadata) image.getMetadata()).toPropertyMap());
 
-      JSONObject json = null;
-      try {
-         json = new JSONObject(mdString);
-      } catch (JSONException e) {
-         throw new RuntimeException(e);
-      }
-      // TODO: where to get the actual bit depth?
-      int bitDepth = image.getBytesPerPixel() * 8;
-      storage_.putImage(image.getRawPixels(), json, axes, rgb, bitDepth,
-              image.getHeight(), image.getWidth());
+      mmcStorage.addImage(dsHandle, image.getByteArray(), width, height, pixelDepth, coordinates, mdString);
    }
 
    @Override
    public Image getImage(Coords coords) throws IOException {
-      if (storage_ == null) {
-         return null;
-      }
-      TaggedImage ti = storage_.getImage(coordsToHashMap(coords));
-      addEssentialImageMetadata(ti, coordsToHashMap(coords));
-      return new DefaultImage(ti, hashMapToCoords(coordsToHashMap(coords)),
-              studioMetadataFromJSON(ti.tags));
+      // TODO: implement this
+      throw new UnsupportedOperationException("Not implemented");
    }
 
    @Override
    public boolean hasImage(Coords coords) {
-      if (storage_ == null) {
-         return false;
-      }
-      return storage_.hasImage(coordsToHashMap(coords));
+      // TODO: implement this
+      throw new UnsupportedOperationException("Not implemented");
    }
 
    @Override
    public Image getAnyImage() {
-      if (storage_.getAxesSet().size() == 0) {
-         return null;
-      }
-      HashMap<String, Object> axes = storage_.getAxesSet().iterator().next();
-      TaggedImage ti = storage_.getImage(axes);
-      addEssentialImageMetadata(ti, axes);
-      return new DefaultImage(ti, hashMapToCoords(axes), studioMetadataFromJSON(ti.tags));
+      // TODO: implement this
+      throw new UnsupportedOperationException("Not implemented");
    }
 
    @Override
    public Iterable<Coords> getUnorderedImageCoords() {
-      return () -> {
-         Stream<HashMap<String, Object>> axesStream = storage_.getAxesSet().stream();
-         Stream<Coords> coordsStream = axesStream.map(MMCStorageAdapter::hashMapToCoords);
-         return coordsStream.iterator();
-      };
+      // TODO: implement this
+      throw new UnsupportedOperationException("Not implemented");
    }
 
    /**
@@ -209,42 +181,21 @@ public class MMCStorageAdapter implements Storage {
     */
    @Override
    public List<Image> getImagesMatching(Coords coords) throws IOException {
-      List<Image> imageList = new LinkedList<>();
-      if (storage_ == null) {
-         return imageList;
-      }
-      HashMap<String, Object> ndTiffCoords = coordsToHashMap(coords);
-      if (storage_.hasImage(ndTiffCoords)) {
-         TaggedImage ti = addEssentialImageMetadata(storage_.getImage(ndTiffCoords), ndTiffCoords);
-         Image img = new DefaultImage(ti, hashMapToCoords(ndTiffCoords),
-                 studioMetadataFromJSON(ti.tags));
-         imageList.add(img);
-      }
-      return imageList;
+      // TODO: implement this
+      throw new UnsupportedOperationException("Not implemented");
    }
 
    @Override
    public List<Image> getImagesIgnoringAxes(
            Coords coords, String... ignoreTheseAxes) throws IOException {
-      // This is obviously wrong, but not quite sure what to do at this point....
-
-      return getImagesMatching(coords);
+      // TODO: implement this
+      throw new UnsupportedOperationException("Not implemented");
    }
 
    @Override
    public int getMaxIndex(String axis) {
-      if (storage_ == null || storage_.getAxesSet() == null || storage_.getAxesSet().isEmpty()) {
-         return -1;
-      }
-      return storage_.getAxesSet().stream().map(new Function<HashMap<String, Object>, Integer>() {
-         @Override
-         public Integer apply(HashMap<String, Object> stringIntegerHashMap) {
-            if (stringIntegerHashMap.containsKey(axis)) {
-               return (Integer) stringIntegerHashMap.get(axis);
-            }
-            return -1;
-         }
-      }).reduce(Math::max).get();
+      // TODO: implement this
+      throw new UnsupportedOperationException("Not implemented");
    }
 
    @Override
@@ -257,89 +208,25 @@ public class MMCStorageAdapter implements Storage {
 
    @Override
    public Coords getMaxIndices() {
-      if (storage_ == null) {
-         return null;
-      }
-      Coords.Builder builder = Coordinates.builder();
-      for (String axis : getAxes()) {
-         builder.index(axis,
-                 storage_.getAxesSet().stream().map(stringIntegerHashMap -> {
-                    if (stringIntegerHashMap.containsKey(axis)) {
-                       return (Integer) stringIntegerHashMap.get(axis);
-                    }
-                    return -1;
-                 }).reduce(Math::max).get());
-      }
-      return builder.build();
+      // TODO: implement this
+      throw new UnsupportedOperationException("Not implemented");
    }
 
    @Override
    public SummaryMetadata getSummaryMetadata() {
-      if (storage_ == null) {
-         return null;
-      }
-      try {
-         return DefaultSummaryMetadata.fromPropertyMap(
-                 NonPropertyMapJSONFormats.summaryMetadata().fromJSON(
-                         storage_.getSummaryMetadata().toString()));
-      } catch (IOException e) {
-         throw new RuntimeException(e);
-      }
+      // TODO: implement this
+      throw new UnsupportedOperationException("Not implemented");
    }
 
    @Override
    public int getNumImages() {
-      if (storage_ == null) {
-         return 0;
-      }
-      return storage_.getAxesSet().size();
+      // TODO: implement this
+      throw new UnsupportedOperationException("Not implemented");
    }
 
    @Override
    public void close() throws IOException {
-      storage_.close();
-   }
-
-   /**
-    * The DefaultImage converter expects to find width and height keys,
-    * though the images fed in don't have them in metadata.
-    * This function explicitly adds width and height keys.
-    *
-    * @param ti TaggedImage to which the width and height keys will be added.
-    * @param axes List with axes.  What are these for?
-    * @return TaggedImage with width and height metadata added.
-    */
-   private TaggedImage addEssentialImageMetadata(TaggedImage ti, HashMap<String, Object> axes) {
-      EssentialImageMetadata essMD = storage_.getEssentialImageMetadata(axes);
-      //Load essential metadata into the image metadata.
-      try {
-         ti.tags.put(PropertyKey.WIDTH.key(), essMD.width);
-         ti.tags.put(PropertyKey.HEIGHT.key(), essMD.height);
-         String pixType;
-         if (essMD.bitDepth == 8 && essMD.rgb) {
-            pixType = "RGB32";
-         } else if (essMD.bitDepth == 8) {
-            pixType = "GRAY8";
-         } else {
-            pixType = "GRAY16";
-         }
-         ti.tags.put(PropertyKey.PIXEL_TYPE.key(), pixType);
-      } catch (Exception e) {
-         throw new RuntimeException(e);
-      }
-      return ti;
-   }
-
-   private Metadata studioMetadataFromJSON(JSONObject tags) {
-      JsonElement je;
-      try {
-         je = new JsonParser().parse(tags.toString());
-      } catch (Exception unlikely) {
-         throw new IllegalArgumentException("Failed to parse JSON created from TaggedImage tags",
-                 unlikely);
-      }
-      return DefaultMetadata.fromPropertyMap(
-              NonPropertyMapJSONFormats.metadata().fromGson(je));
+      mmcStorage.closeDataset(dsHandle);
    }
 }
 

@@ -74,6 +74,8 @@ public class DefaultDatastore implements Datastore {
    private static final String SINGLEPLANE_TIFF_SERIES = "Separate Image Files";
    private static final String MULTIPAGE_TIFF = "Image Stack File";
    private static final String ND_TIFF = "NDTiff stack";
+   // TODO: is there a filter for MMC Storage? Probably not, but it looks like we need it
+   private static final String MMC_API_MULTIFORMAT = "MMCore Storage";
 
    // FileFilters for saving.
    private static final FileFilter SINGLEPLANEFILTER = new SaveFileFilter(
@@ -82,6 +84,8 @@ public class DefaultDatastore implements Datastore {
          MULTIPAGE_TIFF);
    private static final FileFilter NDTIFFFILTER = new SaveFileFilter(
            ND_TIFF);
+   private static final FileFilter MMCSTORAGEFILTER = new SaveFileFilter(
+           MMC_API_MULTIFORMAT);
    private static final String PREFERRED_SAVE_FORMAT = "default format for saving data";
 
    protected Storage storage_ = null;
@@ -471,6 +475,8 @@ public class DefaultDatastore implements Datastore {
          mode = SaveMode.MULTIPAGE_TIFF;
       } else if (filter == NDTIFFFILTER) {
          mode = SaveMode.ND_TIFF;
+      }  else if (filter == MMCSTORAGEFILTER) {
+         mode = SaveMode.MMC_API;
       } else {
          studio_.logs().showError("Unrecognized file format filter "
                + filter.getDescription(), parent);
@@ -531,6 +537,7 @@ public class DefaultDatastore implements Datastore {
       return -1;
    }
 
+   // TODO: implement new section here
    /**
     * Returns the save method set in the user's profile.
     *
@@ -547,6 +554,8 @@ public class DefaultDatastore implements Datastore {
          return Datastore.SaveMode.MULTIPAGE_TIFF;
       } else if (modeStr.equals(SINGLEPLANE_TIFF_SERIES)) {
          return Datastore.SaveMode.SINGLEPLANE_TIFF_SERIES;
+      } else if (modeStr.equals(MMC_API_MULTIFORMAT)) {
+         return SaveMode.MMC_API;
       } else {
          ReportingUtils.logError("Unrecognized save mode " + modeStr);
          return null;
@@ -573,6 +582,9 @@ public class DefaultDatastore implements Datastore {
                break;
             case SINGLEPLANE_TIFF_SERIES:
                modeStr = SINGLEPLANE_TIFF_SERIES;
+               break;
+            case MMC_API:
+               modeStr = MMC_API_MULTIFORMAT;
                break;
             default:
                ReportingUtils.logError("Unrecognized save mode " + mode);

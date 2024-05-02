@@ -55,6 +55,7 @@ import org.micromanager.data.internal.DefaultSummaryMetadata;
 import org.micromanager.data.internal.PropertyKey;
 import org.micromanager.data.internal.StorageRAM;
 import org.micromanager.data.internal.StorageSinglePlaneTiffSeries;
+import org.micromanager.data.internal.mmcstore.MMCStorageAdapter;
 import org.micromanager.data.internal.multipagetiff.StorageMultipageTiff;
 import org.micromanager.data.internal.ndtiff.NDTiffAdapter;
 import org.micromanager.display.DataViewer;
@@ -507,6 +508,7 @@ public final class MMAcquisition extends DataViewerListener {
       }
    }
 
+   // Create a storage adapter below
    private static Storage getAppropriateStorage(final Studio studio,
                                                 final DefaultDatastore store,
                                                 final String path,
@@ -520,6 +522,8 @@ public final class MMAcquisition extends DataViewerListener {
                return new StorageMultipageTiff(studio.app().getMainWindow(), store, path, isNew);
             case ND_TIFF:
                return new NDTiffAdapter(store, path, isNew);
+            case MMC_API:
+               return new MMCStorageAdapter(store, path, isNew);
             default:
                break;
          }

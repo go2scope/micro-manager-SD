@@ -118,7 +118,8 @@ public interface Datastore extends DataProvider {
    enum SaveMode {
       SINGLEPLANE_TIFF_SERIES,
       MULTIPAGE_TIFF,
-      ND_TIFF
+      ND_TIFF,
+      MMC_API
    }
 
    /**

@@ -13,6 +13,7 @@ import org.micromanager.data.DataProviderHasNewSummaryMetadataEvent;
 import org.micromanager.data.Datastore;
 import org.micromanager.data.Storage;
 import org.micromanager.data.SummaryMetadata;
+import org.micromanager.data.internal.mmcstore.MMCStorageAdapter;
 import org.micromanager.data.internal.multipagetiff.StorageMultipageTiff;
 import org.micromanager.data.internal.ndtiff.NDTiffAdapter;
 
@@ -59,6 +60,9 @@ public class DefaultDataSaver extends SwingWorker<Void, Void> {
          ((NDTiffAdapter) saver_).setSummaryMetadata(store.getSummaryMetadata());
       } else if (mode == Datastore.SaveMode.SINGLEPLANE_TIFF_SERIES) {
          saver_ = new StorageSinglePlaneTiffSeries(duplicate_, path_, true);
+      } else if (mode == Datastore.SaveMode.MMC_API) {
+         saver_ = new MMCStorageAdapter(duplicate_, path_, true);
+         ((MMCStorageAdapter) saver_).setSummaryMetadata(store.getSummaryMetadata());
       } else {
          throw new IllegalArgumentException("Unrecognized mode parameter "
                + mode);
