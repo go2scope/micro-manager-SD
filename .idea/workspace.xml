@@ -6,13 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="8d70e0f4-7781-4b5f-9d75-346b9df5f083" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmCoreAndDevices" beforeDir="false" afterPath="$PROJECT_DIR$/mmCoreAndDevices" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/acquisition/internal/MMAcquisition.java" beforeDir="false" afterPath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/acquisition/internal/MMAcquisition.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/Datastore.java" beforeDir="false" afterPath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/Datastore.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/DefaultDataSaver.java" beforeDir="false" afterPath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/DefaultDataSaver.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/DefaultDatastore.java" beforeDir="false" afterPath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/DefaultDatastore.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/mmcstore/MMCStorageAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/mmcstore/MMCStorageAdapter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/internal/dialogs/AcqControlDlg.java" beforeDir="false" afterPath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/internal/dialogs/AcqControlDlg.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -90,7 +83,8 @@
       <workItem from="1713906246690" duration="10599000" />
       <workItem from="1714443769090" duration="1261000" />
       <workItem from="1714445059634" duration="3024000" />
-      <workItem from="1714501452111" duration="3110000" />
+      <workItem from="1714501452111" duration="3460000" />
+      <workItem from="1717007508817" duration="17000" />
     </task>
     <servers />
   </component>
