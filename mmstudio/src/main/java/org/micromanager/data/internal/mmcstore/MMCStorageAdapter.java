@@ -3,6 +3,7 @@ package org.micromanager.data.internal.mmcstore;
 import com.google.common.eventbus.Subscribe;
 import mmcorej.CMMCore;
 import mmcorej.LongVector;
+import mmcorej.StorageDataType;
 import org.micromanager.data.*;
 import org.micromanager.data.internal.*;
 import org.micromanager.internal.MMStudio;
@@ -112,6 +113,7 @@ public class MMCStorageAdapter implements Storage {
       String summaryMDString = NonPropertyMapJSONFormats.summaryMetadata().toJSON(
                  ((DefaultSummaryMetadata) summary).toPropertyMap());
       dsHandle = mmcStorage.createDataset(new File(store.getSavePath()).getParent(), store.getName(), dimensions,
+              StorageDataType.StorageDataType_int16,
               summaryMDString);
    }
 
