@@ -8,6 +8,25 @@ import java.nio.ShortBuffer;
 
 public class G2STest {
     public static void main(String[] args) {
+        // First argument determines the storage engine
+        // Supported options are:
+        // - bigtiff  : G2SBigTiffStorage
+        // - zarr     : AcquireZarrStorage
+        //
+        // By default 'AcquireZarrStorage' is selected
+        String storageengine = args.length > 0 ? args[0] : "zarr";
+        if(!storageengine.equals("zarr") && !storageengine.equals("bigtiff")) {
+            System.out.println("Invalid storage engine selected: " + storageengine);
+            return;
+        }
+
+        // Second argument determines the save location for the storage engine
+        // If not specified working directory will be used
+        String savelocation = args.length > 1 ? args[1] : ".";
+
+        // Third arguments determines number of images (time points) to acquire (2 by default)
+        int numberOfTimepoints = args.length > 2 ? Integer.parseInt(args[2]) : 2;
+
         // instantiate MMCore
         CMMCore core = new CMMCore();
 
@@ -15,7 +34,6 @@ public class G2STest {
         String store = "Store";
         String camera = "Camera";
 
-        int numberOfTimepoints = 2;
 
         try {
             // enable verbose logging
@@ -23,8 +41,10 @@ public class G2STest {
             core.enableDebugLog(true);
 
             // load the storage device
-            core.loadDevice(store, "go2scope", "AcquireZarrStorage");
-            // core.loadDevice(store, "go2scope", "G2SBigTiffStorage"); // alternative storage driver
+            if(storageengine.equals("zarr"))
+                core.loadDevice(store, "go2scope", "AcquireZarrStorage");
+            else
+                core.loadDevice(store, "go2scope", "G2SBigTiffStorage"); // alternative storage driver
 
             // load the demo camera device
             core.loadDevice(camera, "DemoCamera", "DCam");
@@ -53,10 +73,12 @@ public class G2STest {
             shape.add(w); // first dimension x
             shape.add(h); // second dimension y
             shape.add(numberOfTimepoints); // time points
-            String handle = core.createDataset("D:\\AcquisitionData\\g2sStorage", "test-zarr", shape, type, "");
+            String handle = core.createDataset(savelocation, "test-" + storageengine, shape, type, "");
 
+            core.logMessage("Dataset UID: " + handle);
             core.logMessage("START OF ACQUISITION");
-            for (int i=0; i<numberOfTimepoints; i++) {
+            long start = System.nanoTime();
+            for(int i = 0; i < numberOfTimepoints; i++) {
                 // snap an image
                 core.snapImage();
 
@@ -83,6 +105,15 @@ public class G2STest {
             // we are done so close the dataset
             core.closeDataset(handle);
             core.logMessage("END OF ACQUISITION");
+            long end = System.nanoTime();
+
+            // Calculate storage driver bandwidth
+            double elapseds = (end - start) / 1000000000.0;
+            double sizemb = numberOfTimepoints * w * h * 2 / (1024.0 * 1024.0);
+            double bw = sizemb / elapseds;
+            core.logMessage(String.format("Acquisition completed in %.3f sec", elapseds));
+            core.logMessage(String.format("Dataset size %.1f MB", sizemb));
+            core.logMessage(String.format("Storage driver bandwidth - %.1f MB/s", bw));
 
             // unload all devices (not really necessary)
             core.unloadAllDevices();
