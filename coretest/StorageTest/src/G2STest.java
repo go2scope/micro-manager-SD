@@ -52,8 +52,11 @@ public class G2STest {
             // initialize the system, this will in turn initialize each device
             core.initializeAllDevices();
 
-            // configure the camera device
+            // configure the camera device, simulate Hamamatsu Fire
             core.setProperty(camera, "PixelType", "16bit");
+            core.setProperty(camera, "OnCameraCCDXSize", "4432");
+            core.setProperty(camera, "OnCameraCCDYSize", "2368");
+            core.setExposure(10.0);
 
             // take one image to "warm up" the camera and get actual image dimensions
             core.snapImage();
@@ -98,8 +101,12 @@ public class G2STest {
                 sb.put((short[])img.pix);
 
                 // add image to stream
-                System.out.println("Adding image " + i);
+                double imgSizeMb = 2.0 * w * h / (1024.0 * 1024.0);
+                long startSave = System.currentTimeMillis();
                 core.addImage(handle, bb.array().length, bb.array(), coords, img.tags.toString());
+                double imgSaveTime = System.currentTimeMillis() - startSave;
+                double bw = imgSizeMb / (imgSaveTime / 1000.0);
+                System.out.printf("Saved image %d in %.2f ms, size %.1f MB, bw %.1f MB/s\n", i, imgSaveTime, imgSizeMb, bw);
             }
 
             // we are done so close the dataset
@@ -109,7 +116,7 @@ public class G2STest {
 
             // Calculate storage driver bandwidth
             double elapseds = (end - start) / 1000000000.0;
-            double sizemb = numberOfTimepoints * w * h * 2 / (1024.0 * 1024.0);
+            double sizemb = 2.0 * numberOfTimepoints * w * h / (1024.0 * 1024.0);
             double bw = sizemb / elapseds;
             core.logMessage(String.format("Acquisition completed in %.3f sec", elapseds));
             core.logMessage(String.format("Dataset size %.1f MB", sizemb));
