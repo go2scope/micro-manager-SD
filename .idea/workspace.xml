@@ -5,10 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8d70e0f4-7781-4b5f-9d75-346b9df5f083" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/micro-manager-SD.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/micro-manager-SD.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/mmcstore/MMCStorageAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/mmcstore/MMCStorageAdapter.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -41,7 +38,7 @@
     "WebServerToolWindowFactoryState": "false",
     "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "H:/projects/micro-manager-SD",
+    "last_opened_file_path": "H:/projects/micro-manager-SD/build/Java",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -89,6 +86,7 @@
       <workItem from="1714501452111" duration="3460000" />
       <workItem from="1717007508817" duration="17000" />
       <workItem from="1729184836928" duration="471000" />
+      <workItem from="1729199697164" duration="2175000" />
     </task>
     <servers />
   </component>
