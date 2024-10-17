@@ -1,10 +1,5 @@
 import mmcorej.CMMCore;
 import mmcorej.LongVector;
-import mmcorej.StorageDataType;
-import mmcorej.TaggedImage;
-
-import java.nio.ByteBuffer;
-import java.nio.ShortBuffer;
 
 public class G2SReadTest {
     public static void main(String[] args) {
