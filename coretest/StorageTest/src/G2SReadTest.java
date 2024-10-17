@@ -1,5 +1,6 @@
 import mmcorej.CMMCore;
 import mmcorej.LongVector;
+import mmcorej.StorageDataType;
 
 public class G2SReadTest {
     public static void main(String[] args) {
@@ -43,16 +44,16 @@ public class G2SReadTest {
             core.initializeAllDevices();
 
             long startRead = System.currentTimeMillis();
-            String handle = core.loadDataset(readDir + "/" + datasetName, datasetName);
+            String handle = core.loadDataset(readDir + "/" + datasetName);
             long dsReadTime = System.currentTimeMillis() - startRead;
             mmcorej.LongVector shape = core.getDatasetShape(handle);
             mmcorej.StorageDataType type = core.getDatasetPixelType(handle);
             assert(shape.size() > 2);
-            int w = (int) shape.get(0);
-            int h = (int) shape.get(1);
+            int w = shape.get(0);
+            int h = shape.get(1);
             int numImages = 1;
             for (int i = 2; i < shape.size(); i++) {
-                numImages *= (int) shape.get(i);
+                numImages *= shape.get(i);
             }
             System.out.printf("Dataset: %s, %d x %d, images %d, type %s, loaded in %d ms\n", readDir + "/" + datasetName, w, h,
                     numImages, type, dsReadTime);
@@ -68,8 +69,16 @@ public class G2SReadTest {
                     System.out.println("Failed to fetch image " + i);
                     return;
                 }
-                byte[] bimage = (byte[]) img;
-                System.out.println("Image " + i + " size: " + bimage.length);
+                if(type == StorageDataType.StorageDataType_GRAY16) {
+                    short[] bimage = (short[])img;
+                    System.out.println("Image " + i + " size: " + bimage.length * 2);
+                } else {
+                    byte[] bimage = (byte[]) img;
+                    System.out.println("Image " + i + " size: " + bimage.length);
+                }
+
+                String meta = core.getImageMeta(handle, coords);
+                System.out.println("Image metadata: " + meta);
             }
 
             // we are done so close the dataset

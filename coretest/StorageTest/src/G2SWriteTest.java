@@ -4,6 +4,7 @@ import mmcorej.StorageDataType;
 import mmcorej.TaggedImage;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
 
 public class G2SWriteTest {
@@ -97,6 +98,7 @@ public class G2SWriteTest {
                 // convert short buffer to byte buffer
                 // TODO: to avoid this conversion, MMCore storage API needs to support short data type directly
                 ByteBuffer bb = ByteBuffer.allocate(w * h * 2);
+                bb.order(ByteOrder.LITTLE_ENDIAN);
                 ShortBuffer sb = bb.asShortBuffer();
                 sb.put((short[])img.pix);
 
