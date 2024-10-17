@@ -40,5 +40,6 @@
         <jarDirectory url="file://$MODULE_DIR$/dependencies/artifacts/compile" recursive="false" type="SOURCES" />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="x64" level="project" />
   </component>
 </module>

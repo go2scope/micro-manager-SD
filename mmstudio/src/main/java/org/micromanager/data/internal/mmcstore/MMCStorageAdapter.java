@@ -51,7 +51,11 @@ public class MMCStorageAdapter implements Storage {
 
       // if we are not creating a new dataset, load the existing one
       if (!amInWriteMode) {
-         dsHandle = mmcStorage.loadDataset(new File(dir).getParent(), store.getName());
+         try {
+            dsHandle = mmcStorage.loadDataset(dir);
+         } catch (Exception e) {
+            throw new RuntimeException(e);
+         }
       }
 
    }
@@ -112,14 +116,22 @@ public class MMCStorageAdapter implements Storage {
       }
       String summaryMDString = NonPropertyMapJSONFormats.summaryMetadata().toJSON(
                  ((DefaultSummaryMetadata) summary).toPropertyMap());
-      dsHandle = mmcStorage.createDataset(new File(store.getSavePath()).getParent(), store.getName(), dimensions,
-              StorageDataType.StorageDataType_int16,
-              summaryMDString);
+      try {
+         dsHandle = mmcStorage.createDataset(new File(store.getSavePath()).getParent(), store.getName(), dimensions,
+                 StorageDataType.StorageDataType_GRAY16,
+                 summaryMDString);
+      } catch (Exception e) {
+         throw new RuntimeException(e);
+      }
    }
 
    @Override
    public void freeze() throws IOException {
-      mmcStorage.closeDataset(dsHandle);
+      try {
+         mmcStorage.closeDataset(dsHandle);
+      } catch (Exception e) {
+         throw new RuntimeException(e);
+      }
       store.unregisterForEvents(this);
    }
 
@@ -146,7 +158,11 @@ public class MMCStorageAdapter implements Storage {
       String mdString = NonPropertyMapJSONFormats.metadata().toJSON(
               ((DefaultMetadata) image.getMetadata()).toPropertyMap());
 
-      mmcStorage.addImage(dsHandle, image.getByteArray(), width, height, pixelDepth, coordinates, mdString);
+      try {
+         mmcStorage.addImage(dsHandle, image.getByteArray().length, image.getByteArray(), coordinates, mdString);
+      } catch (Exception e) {
+         throw new RuntimeException(e);
+      }
    }
 
    @Override
@@ -228,7 +244,11 @@ public class MMCStorageAdapter implements Storage {
 
    @Override
    public void close() throws IOException {
-      mmcStorage.closeDataset(dsHandle);
+      try {
+         mmcStorage.closeDataset(dsHandle);
+      } catch (Exception e) {
+         throw new RuntimeException(e);
+      }
    }
 }
 
