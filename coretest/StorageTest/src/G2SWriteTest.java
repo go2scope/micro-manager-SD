@@ -6,7 +6,7 @@ import mmcorej.TaggedImage;
 import java.nio.ByteBuffer;
 import java.nio.ShortBuffer;
 
-public class G2STest {
+public class G2SWriteTest {
     public static void main(String[] args) {
         // First argument determines the storage engine
         // Supported options are:
@@ -120,7 +120,7 @@ public class G2STest {
             double bw = sizemb / elapseds;
             core.logMessage(String.format("Acquisition completed in %.3f sec", elapseds));
             core.logMessage(String.format("Dataset size %.1f MB", sizemb));
-            core.logMessage(String.format("Storage driver bandwidth - %.1f MB/s", bw));
+            core.logMessage(String.format("Storage driver bandwidth %.1f MB/s", bw));
 
             // unload all devices (not really necessary)
             core.unloadAllDevices();
