@@ -61,8 +61,8 @@ public class G2SWriteTest {
 
             // take one image to "warm up" the camera and get actual image dimensions
             core.snapImage();
-            int w = (int)core.getImageHeight();
-            int h = (int)core.getImageWidth();
+            int w = (int)core.getImageWidth();
+            int h = (int)core.getImageHeight();
 
             // fetch the image with metadata
             TaggedImage img = core.getTaggedImage();
@@ -101,6 +101,9 @@ public class G2SWriteTest {
                 bb.order(ByteOrder.LITTLE_ENDIAN);
                 ShortBuffer sb = bb.asShortBuffer();
                 sb.put((short[])img.pix);
+
+                // Add image index to the image metadata
+                img.tags.put("Image-index", i);
 
                 // add image to stream
                 double imgSizeMb = 2.0 * w * h / (1024.0 * 1024.0);

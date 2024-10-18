@@ -2,6 +2,8 @@ import mmcorej.CMMCore;
 import mmcorej.LongVector;
 import mmcorej.StorageDataType;
 
+import java.util.Vector;
+
 public class G2SReadTest {
     public static void main(String[] args) {
         // First argument determines the storage engine
@@ -64,6 +66,22 @@ public class G2SReadTest {
                 coords.set(i, 0);
             }
             for (int i = 0; i < numImages; i++) {
+                // Reverse engineer coordinates
+                if(shape.size() == 3)
+                    coords.set(2, i);
+                else {
+                    int fx = 0;
+                    for (int j = (int)shape.size() - 1; j >= 2; j--) {
+                        int sum = 1;
+                        for(int k = 2; k < j; k++) {
+                            sum *= shape.get(k);
+                        }
+                        int ix = (i - fx) / sum;
+                        coords.set(j, ix);
+                        fx += ix * sum;
+                    }
+                }
+
                 Object img = core.getImage(handle, coords);
                 if (img == null) {
                     System.out.println("Failed to fetch image " + i);
