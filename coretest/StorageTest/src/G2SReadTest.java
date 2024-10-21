@@ -2,7 +2,7 @@ import mmcorej.CMMCore;
 import mmcorej.LongVector;
 import mmcorej.StorageDataType;
 
-import java.util.Vector;
+import java.util.Arrays;
 
 public class G2SReadTest {
     public static void main(String[] args) {
@@ -44,7 +44,6 @@ public class G2SReadTest {
 
             // initialize the system, this will in turn initialize each device
             core.initializeAllDevices();
-
             long startRead = System.currentTimeMillis();
             String handle = core.loadDataset(readDir + "/" + datasetName);
             long dsReadTime = System.currentTimeMillis() - startRead;
@@ -81,22 +80,27 @@ public class G2SReadTest {
                         fx += ix * sum;
                     }
                 }
-
+                startRead = System.currentTimeMillis();
                 Object img = core.getImage(handle, coords);
+                long imgReadTime = System.currentTimeMillis() - startRead;
                 if (img == null) {
                     System.out.println("Failed to fetch image " + i);
                     return;
                 }
+                int[] intCoords = new int[(int)coords.size()];
+                for (int j = 0; j < coords.size(); j++) {
+                    intCoords[j] = (int)coords.get(j);
+                }
                 if(type == StorageDataType.StorageDataType_GRAY16) {
                     short[] bimage = (short[])img;
-                    System.out.println("Image " + i + " size: " + bimage.length * 2);
+                    System.out.println("Image " + i + ", " + Arrays.toString(intCoords) + " size: " + bimage.length * 2 + ", in " + imgReadTime + " ms");
                 } else {
                     byte[] bimage = (byte[]) img;
-                    System.out.println("Image " + i + " size: " + bimage.length);
+                    System.out.println("Image " + i + ", " + Arrays.toString(intCoords) + " size: " + bimage.length + ", in " + imgReadTime + " ms");
                 }
 
                 String meta = core.getImageMeta(handle, coords);
-                System.out.println("Image metadata: " + meta);
+                //System.out.println("Image metadata: " + meta);
             }
 
             // we are done so close the dataset

@@ -111,13 +111,18 @@ public class MMCStorageAdapter implements Storage {
 
       // create an array of intended dimensions
       LongVector dimensions = new LongVector();
+      // first add x and y
+      dimensions.add(summaryMetadata.getImageWidth());
+      dimensions.add(summaryMetadata.getImageHeight());
       for (String axis : coordinates.getAxes()) {
          dimensions.add(coordinates.getIndex(axis));
       }
       String summaryMDString = NonPropertyMapJSONFormats.summaryMetadata().toJSON(
                  ((DefaultSummaryMetadata) summary).toPropertyMap());
       try {
-         dsHandle = mmcStorage.createDataset(new File(store.getSavePath()).getParent(), store.getName(), dimensions,
+         dsHandle = mmcStorage.createDataset(new File(store.getSavePath()).getParent(),
+                 store.getName(),
+                 dimensions,
                  StorageDataType.StorageDataType_GRAY16,
                  summaryMDString);
       } catch (Exception e) {
@@ -232,14 +237,24 @@ public class MMCStorageAdapter implements Storage {
 
    @Override
    public SummaryMetadata getSummaryMetadata() {
-      // TODO: implement this
-      throw new UnsupportedOperationException("Not implemented");
+      return summaryMetadata;
    }
 
    @Override
    public int getNumImages() {
-      // TODO: implement this
-      throw new UnsupportedOperationException("Not implemented");
+      if (dsHandle.isEmpty()) {
+         return 0;
+      }
+      try {
+         mmcorej.LongVector shape = mmcStorage.getDatasetShape(dsHandle);
+         int numImages = 1;
+         for (int i = 2; i < shape.size(); i++) {
+            numImages *= shape.get(i);
+         }
+         return numImages;
+      } catch (Exception e) {
+         throw new RuntimeException(e);
+      }
    }
 
    @Override
