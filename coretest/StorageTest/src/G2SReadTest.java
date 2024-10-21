@@ -6,13 +6,16 @@ import java.util.Arrays;
 
 public class G2SReadTest {
     public static void main(String[] args) {
+        // Test program call syntax:
+        // java -cp <classpath> G2SReadTest <storage_engine> <data_dir> <dataset_name> [direct_io] [optimized_access]
+        //
         // First argument determines the storage engine
         // Supported options are:
         // - bigtiff  : G2SBigTiffStorage
         // - zarr     : AcquireZarrStorage
         //
-        if (args.length != 3) {
-            System.out.println("Usage: java -cp <classpath> G2SReadTest <storage engine> <data dir> <dataset name>");
+        if (args.length < 3) {
+            System.out.println("Usage: java -cp <classpath> G2SReadTest <storage_engine> <data_dir> <dataset_name> [direct_io] [optimized_access]");
             return;
         }
         String storageEngine = args[0];
@@ -20,6 +23,10 @@ public class G2SReadTest {
             System.out.println("Invalid storage engine selected: " + storageEngine);
             return;
         }
+
+        boolean directio = args.length > 3 && Integer.parseInt(args[3]) == 1;
+        boolean optimalaccess = args.length <= 4 || Integer.parseInt(args[4]) != 0;
+        boolean printmeta = args.length > 5 && Integer.parseInt(args[5]) == 1;
 
         // Dataset location
         String readDir = args[1];
@@ -44,6 +51,10 @@ public class G2SReadTest {
 
             // initialize the system, this will in turn initialize each device
             core.initializeAllDevices();
+
+            if(storageEngine.equals("bigtiff"))
+                core.setProperty(store, "DirectIO", directio ? 1 : 0);
+
             long startRead = System.currentTimeMillis();
             String handle = core.loadDataset(readDir + "/" + datasetName);
             long dsReadTime = System.currentTimeMillis() - startRead;
@@ -66,20 +77,11 @@ public class G2SReadTest {
             }
             for (int i = 0; i < numImages; i++) {
                 // Reverse engineer coordinates
-                if(shape.size() == 3)
-                    coords.set(2, i);
-                else {
-                    int fx = 0;
-                    for (int j = (int)shape.size() - 1; j >= 2; j--) {
-                        int sum = 1;
-                        for(int k = 2; k < j; k++) {
-                            sum *= shape.get(k);
-                        }
-                        int ix = (i - fx) / sum;
-                        coords.set(j, ix);
-                        fx += ix * sum;
-                    }
-                }
+                if(optimalaccess)
+                    calcCoordsOptimized(i, shape, coords);
+                else
+                    calcCoordsRandom(i, shape, coords);
+
                 startRead = System.currentTimeMillis();
                 Object img = core.getImage(handle, coords);
                 long imgReadTime = System.currentTimeMillis() - startRead;
@@ -88,19 +90,22 @@ public class G2SReadTest {
                     return;
                 }
                 int[] intCoords = new int[(int)coords.size()];
-                for (int j = 0; j < coords.size(); j++) {
-                    intCoords[j] = (int)coords.get(j);
-                }
+                for (int j = 0; j < coords.size(); j++)
+                    intCoords[j] = coords.get(j);
+
                 if(type == StorageDataType.StorageDataType_GRAY16) {
                     short[] bimage = (short[])img;
-                    System.out.println("Image " + i + ", " + Arrays.toString(intCoords) + " size: " + bimage.length * 2 + ", in " + imgReadTime + " ms");
+                    double bw = (2 * bimage.length / 1048576.0) / (imgReadTime / 1000.0);
+                    System.out.println("Image " + String.format("%3d", i) + ", " + Arrays.toString(intCoords) + " size: " + bimage.length * 2 + ", in " + imgReadTime + " ms (" + String.format("%.1f", bw) + " MB/s)");
                 } else {
                     byte[] bimage = (byte[]) img;
-                    System.out.println("Image " + i + ", " + Arrays.toString(intCoords) + " size: " + bimage.length + ", in " + imgReadTime + " ms");
+                    double bw = (bimage.length / 1048576.0) / (imgReadTime / 1000.0);
+                    System.out.println("Image " + String.format("%3d", i) + ", " + Arrays.toString(intCoords) + " size: " + bimage.length + ", in " + imgReadTime + " ms (" + String.format("%.1f", bw) + " MB/s)");
                 }
 
                 String meta = core.getImageMeta(handle, coords);
-                //System.out.println("Image metadata: " + meta);
+                if(printmeta)
+                    System.out.println("Image metadata: " + meta);
             }
 
             // we are done so close the dataset
@@ -111,6 +116,41 @@ public class G2SReadTest {
 
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * Calculate image coordinates for optimized access
+     * @param ind Image index
+     * @param shape Dataset shape
+     * @param coords Image coordinates [out]
+     */
+    private static void calcCoordsOptimized(int ind, mmcorej.LongVector shape, mmcorej.LongVector coords) {
+        int fx = 0;
+        for(int j = (int)shape.size() - 1; j >= 2; j--) {
+            int sum = 1;
+            for(int k = 2; k < j; k++)
+                sum *= shape.get(k);
+            int ix = (ind - fx) / sum;
+            coords.set(j, ix);
+            fx += ix * sum;
+        }
+    }
+    /**
+     * Calculate image coordinates for random access
+     * @param ind Image index
+     * @param shape Dataset shape
+     * @param coords Image coordinates [out]
+     */
+    private static void calcCoordsRandom(int ind, mmcorej.LongVector shape, mmcorej.LongVector coords) {
+        int fx = 0;
+        for(int j = 2; j < (int)shape.size(); j++) {
+            int sum = 1;
+            for(int k = j + 1; k < (int)shape.size(); k++)
+                sum *= shape.get(k);
+            int ix = (ind - fx) / sum;
+            coords.set(j, ix);
+            fx += ix * sum;
         }
     }
 }
