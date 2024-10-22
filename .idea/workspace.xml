@@ -6,8 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="8d70e0f4-7781-4b5f-9d75-346b9df5f083" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/coretest/StorageTest/src/G2SReadTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/coretest/StorageTest/src/G2SReadTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/mmcstore/MMCStorageAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/mmcstore/MMCStorageAdapter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/coretest/StorageTest/src/G2SWriteTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/coretest/StorageTest/src/G2SWriteTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -102,7 +101,7 @@
       <workItem from="1729199697164" duration="3696000" />
       <workItem from="1729465979469" duration="10000" />
       <workItem from="1729466015022" duration="737000" />
-      <workItem from="1729474477132" duration="5190000" />
+      <workItem from="1729474477132" duration="8726000" />
     </task>
     <servers />
   </component>

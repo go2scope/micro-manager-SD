@@ -85,6 +85,7 @@ public class G2SWriteTest {
             mmcorej.LongVector shape = new LongVector();
             mmcorej.StorageDataType type = StorageDataType.StorageDataType_GRAY16;
 
+            // zarr convention: T, C, Z, Y, X
             shape.add(w); // first dimension x
             shape.add(h); // second dimension y
             shape.add(numberOfChannels); // channels
