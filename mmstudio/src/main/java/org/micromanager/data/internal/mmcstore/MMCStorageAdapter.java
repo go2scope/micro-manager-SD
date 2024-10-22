@@ -4,6 +4,7 @@ import com.google.common.eventbus.Subscribe;
 import mmcorej.CMMCore;
 import mmcorej.LongVector;
 import mmcorej.StorageDataType;
+import mmcorej.TaggedImage;
 import org.micromanager.data.*;
 import org.micromanager.data.internal.*;
 import org.micromanager.internal.MMStudio;
@@ -12,8 +13,11 @@ import org.micromanager.internal.utils.ReportingUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Implements Storage on MMCore storage device.
@@ -25,6 +29,7 @@ public class MMCStorageAdapter implements Storage {
    private SummaryMetadata summaryMetadata;
    private String dsHandle = "";
    private String dataPath;
+   private final ConcurrentHashMap<Coords, Image> writtenCoords = new ConcurrentHashMap<>();
 
    /**
     * Constructor of the MMCStorageAdapter.
@@ -154,16 +159,14 @@ public class MMCStorageAdapter implements Storage {
          throw new RuntimeException("RGB images are not supported");
       }
       Coords coords = image.getCoords();
-
-      LongVector coordinates = new LongVector();
-      for (String axis : coords.getAxes()) {
-         coordinates.add(coords.getIndex(axis));
+      synchronized(writtenCoords) {
+         writtenCoords.put(coords, image);
       }
 
       String mdString = NonPropertyMapJSONFormats.metadata().toJSON(
               ((DefaultMetadata) image.getMetadata()).toPropertyMap());
-
       try {
+         LongVector coordinates = calcCoords(coords);
          mmcStorage.addImage(dsHandle, image.getByteArray().length, image.getByteArray(), coordinates, mdString);
       } catch (Exception e) {
          throw new RuntimeException(e);
@@ -172,26 +175,62 @@ public class MMCStorageAdapter implements Storage {
 
    @Override
    public Image getImage(Coords coords) throws IOException {
-      // TODO: implement this
-      throw new UnsupportedOperationException("Not implemented");
+      boolean cvalid = false;
+      synchronized(writtenCoords) {
+         // Check cache
+         if(writtenCoords.containsKey(coords)) {
+            Image img = writtenCoords.get(coords);
+            if(img != null)
+               return img;
+            cvalid = true;
+         }
+      }
+      if(!cvalid && !hasCoords(coords))
+         return null;
+      LongVector cdx = calcCoords(coords);
+      try {
+         TaggedImage img = (TaggedImage) mmcStorage.getImage(dsHandle, cdx);
+         return new DefaultImage(img);
+         // TODO: implement this
+      }
+      catch (Exception e) {
+         throw new RuntimeException(e);
+      }
    }
 
    @Override
    public boolean hasImage(Coords coords) {
-      // TODO: implement this
-      throw new UnsupportedOperationException("Not implemented");
+      if(!hasCoords(coords))
+         return false;
+      return writtenCoords.containsKey(coords);
    }
 
    @Override
    public Image getAnyImage() {
-      // TODO: implement this
-      throw new UnsupportedOperationException("Not implemented");
+      synchronized(writtenCoords) {
+         // Check cache
+         if(!writtenCoords.isEmpty()) {
+            Image img = writtenCoords.elements().nextElement();
+            if(img != null)
+               return img;
+         }
+      }
+      return null;
+//      LongVector coordinates = new LongVector();
+//      // TODO: implement this
+//      try {
+//         TaggedImage img = (TaggedImage) mmcStorage.getImage(dsHandle, coordinates);
+//         return new DefaultImage(img);
+//      }
+//      catch (Exception e) {
+//         throw new RuntimeException(e);
+//      }
    }
 
    @Override
    public Iterable<Coords> getUnorderedImageCoords() {
       // TODO: implement this
-      throw new UnsupportedOperationException("Not implemented");
+      return null;
    }
 
    /**
@@ -204,21 +243,35 @@ public class MMCStorageAdapter implements Storage {
     */
    @Override
    public List<Image> getImagesMatching(Coords coords) throws IOException {
+      ArrayList<Image> ret = new ArrayList<>();
+      if(coords.getAxes().isEmpty())
+         return ret;
       // TODO: implement this
-      throw new UnsupportedOperationException("Not implemented");
+      return ret;
    }
 
    @Override
-   public List<Image> getImagesIgnoringAxes(
-           Coords coords, String... ignoreTheseAxes) throws IOException {
-      // TODO: implement this
-      throw new UnsupportedOperationException("Not implemented");
+   public List<Image> getImagesIgnoringAxes(Coords coords, String... ignoreTheseAxes) throws IOException {
+      HashSet<Image> result = new HashSet<>();
+      if(!hasCoords(coords))
+         return new ArrayList<>(result);
+      synchronized(writtenCoords) {
+         for(Coords imageCoords : writtenCoords.keySet()) {
+            if(coords.equals(imageCoords.copyRemovingAxes(ignoreTheseAxes))) {
+               result.add(writtenCoords.get(imageCoords));
+            }
+         }
+      }
+      return new ArrayList<>(result);
    }
 
    @Override
    public int getMaxIndex(String axis) {
-      // TODO: implement this
-      throw new UnsupportedOperationException("Not implemented");
+      Coords coordinates = summaryMetadata.getIntendedDimensions();
+      if (coordinates == null) {
+         throw new RuntimeException("Summary metadata missing intended dimensions");
+      }
+      return coordinates.getIndex(axis);
    }
 
    @Override
@@ -261,9 +314,44 @@ public class MMCStorageAdapter implements Storage {
    public void close() throws IOException {
       try {
          mmcStorage.closeDataset(dsHandle);
+         synchronized (writtenCoords) {
+            writtenCoords.clear();
+         }
       } catch (Exception e) {
          throw new RuntimeException(e);
       }
+   }
+
+   private LongVector calcCoords(Coords coords) {
+      LongVector ret = new LongVector();
+      if(dsHandle.isEmpty())
+         return ret;
+      Coords dims = summaryMetadata.getIntendedDimensions();
+      if(dims == null || dims.getAxes().isEmpty())
+         return ret;
+      ret.add(0);       // Width
+      ret.add(0);       // Height
+      for(String axis : dims.getAxes()) {
+         int index = coords.getIndex(axis);
+         if(index >= dims.getIndex(axis))
+            index = dims.getIndex(axis);
+         ret.add(index);
+      }
+      return ret;
+   }
+
+   private boolean hasCoords(Coords coords) {
+      if(dsHandle.isEmpty())
+         return false;
+      Coords dims = summaryMetadata.getIntendedDimensions();
+      if(dims == null || dims.getAxes().isEmpty())
+         return false;
+      for(String axis : dims.getAxes()) {
+         int index = coords.getIndex(axis);
+         if(index >= dims.getIndex(axis))
+            return false;
+      }
+      return true;
    }
 }
 
