@@ -25,17 +25,20 @@ public class G2SWriteTest {
         // If not specified working directory will be used
         String savelocation = args.length > 1 ? args[1] : ".";
 
-        // Third arguments determines number of channels to acquire (1 by default)
+        // Third argument determines number of channels to acquire (1 by default)
         int numberOfChannels = args.length > 2 ? Integer.parseInt(args[2]) : 1;
 
-        // Fourth arguments determines number of time points to acquire (2 by default)
+        // Fourth argument determines number of time points to acquire (2 by default)
         int numberOfTimepoints = args.length > 3 ? Integer.parseInt(args[3]) : 2;
 
-        // Fifth arguments determines number of positions to acquire (1 by default)
+        // Fifth argument determines number of positions to acquire (1 by default)
         int numberOfPositions = args.length > 4 ? Integer.parseInt(args[4]) : 1;
 
-        // Sixth arguments determines direct or cached I/O
+        // Sixth argument determines direct or cached I/O
         boolean directio = args.length > 5 && Integer.parseInt(args[5]) == 1;
+
+        // Seventh argument determines flush cycle
+        int flushCycle = args.length > 6 ? Integer.parseInt(args[6]) : 0;
 
         // instantiate MMCore
         CMMCore core = new CMMCore();
@@ -67,8 +70,10 @@ public class G2SWriteTest {
             core.setProperty(camera, "OnCameraCCDYSize", "2368");
             core.setExposure(10.0);
 
-            if(storageengine.equals("bigtiff"))
+            if(storageengine.equals("bigtiff")) {
                 core.setProperty(store, "DirectIO", directio ? 1 : 0);
+                core.setProperty(store, "FlushCycle", flushCycle);
+            }
 
             // take one image to "warm up" the camera and get actual image dimensions
             core.snapImage();
@@ -116,8 +121,7 @@ public class G2SWriteTest {
 
                         // convert short buffer to byte buffer
                         // TODO: to avoid this conversion, MMCore storage API needs to support short data type directly
-                        ByteBuffer bb = ByteBuffer.allocate(w * h * 2);
-                        bb.order(ByteOrder.LITTLE_ENDIAN);
+                        ByteBuffer bb = ByteBuffer.allocate(w * h * 2).order(ByteOrder.LITTLE_ENDIAN);
                         ShortBuffer sb = bb.asShortBuffer();
                         sb.put((short[])img.pix);
 
@@ -126,27 +130,31 @@ public class G2SWriteTest {
 
                         // add image to stream
                         double imgSizeMb = 2.0 * w * h / (1024.0 * 1024.0);
-                        long startSave = System.currentTimeMillis();
+                        long startSave = System.nanoTime();
                         core.addImage(handle, bb.array().length, bb.array(), coords, img.tags.toString());
-                        double imgSaveTime = System.currentTimeMillis() - startSave;
-                        double bw = imgSizeMb / (imgSaveTime / 1000.0);
-                        System.out.printf("Saved image %d in %.2f ms, size %.1f MB, bw %.1f MB/s\n", imgind++, imgSaveTime, imgSizeMb, bw);
+                        double imgSaveTime = System.nanoTime() - startSave;
+                        double bw = imgSizeMb / (imgSaveTime / 1000000000.0);
+                        System.out.printf("Saved image %d in %.2f ms, size %.1f MB, bw %.1f MB/s\n", imgind++, imgSaveTime / 1000000.0, imgSizeMb, bw);
                     }
                 }
             }
 
             // we are done so close the dataset
+            long startClose = System.nanoTime();
             core.closeDataset(handle);
-            core.logMessage("END OF ACQUISITION");
             long end = System.nanoTime();
+            double imgSaveTime = (end - startClose) / 1000000.0;
+            System.out.printf("Image close time %.2f ms\n", imgSaveTime);
+
+            core.logMessage("END OF ACQUISITION");
 
             // Calculate storage driver bandwidth
             double elapseds = (end - start) / 1000000000.0;
             double sizemb = 2.0 * numberOfTimepoints * w * h / (1024.0 * 1024.0);
             double bw = sizemb / elapseds;
-            System.out.printf(String.format("Acquisition completed in %.3f sec", elapseds));
-            System.out.printf(String.format("Dataset size %.1f MB", sizemb));
-            System.out.printf(String.format("Storage driver bandwidth %.1f MB/s", bw));
+            System.out.printf("Acquisition completed in %.3f sec\n", elapseds);
+            System.out.printf("Dataset size %.1f MB\n", sizemb);
+            System.out.printf("Storage driver bandwidth %.1f MB/s\n", bw);
 
             // unload all devices (not really necessary)
             core.unloadAllDevices();

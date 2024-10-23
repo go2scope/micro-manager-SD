@@ -82,9 +82,9 @@ public class G2SReadTest {
                 else
                     calcCoordsRandom(i, shape, coords);
 
-                startRead = System.currentTimeMillis();
+                startRead = System.nanoTime();
                 Object img = core.getImage(handle, coords);
-                long imgReadTime = System.currentTimeMillis() - startRead;
+                long imgReadTime = System.nanoTime() - startRead;
                 if (img == null) {
                     System.out.println("Failed to fetch image " + i);
                     return;
@@ -95,12 +95,12 @@ public class G2SReadTest {
 
                 if(type == StorageDataType.StorageDataType_GRAY16) {
                     short[] bimage = (short[])img;
-                    double bw = (2 * bimage.length / 1048576.0) / (imgReadTime / 1000.0);
-                    System.out.println("Image " + String.format("%3d", i) + ", " + Arrays.toString(intCoords) + " size: " + bimage.length * 2 + ", in " + imgReadTime + " ms (" + String.format("%.1f", bw) + " MB/s)");
+                    double bw = (2 * bimage.length / 1048576.0) / (imgReadTime / 1000000000.0);
+                    System.out.println("Image " + String.format("%3d", i) + ", " + Arrays.toString(intCoords) + " size: " + bimage.length * 2 + ", in " + String.format("%.1f", imgReadTime / 1000000.0) + " ms (" + String.format("%.1f", bw) + " MB/s)");
                 } else {
                     byte[] bimage = (byte[]) img;
-                    double bw = (bimage.length / 1048576.0) / (imgReadTime / 1000.0);
-                    System.out.println("Image " + String.format("%3d", i) + ", " + Arrays.toString(intCoords) + " size: " + bimage.length + ", in " + imgReadTime + " ms (" + String.format("%.1f", bw) + " MB/s)");
+                    double bw = (bimage.length / 1048576.0) / (imgReadTime / 1000000000.0);
+                    System.out.println("Image " + String.format("%3d", i) + ", " + Arrays.toString(intCoords) + " size: " + bimage.length + ", in " + String.format("%.1f", imgReadTime / 1000000.0) + " ms (" + String.format("%.1f", bw) + " MB/s)");
                 }
 
                 String meta = core.getImageMeta(handle, coords);
