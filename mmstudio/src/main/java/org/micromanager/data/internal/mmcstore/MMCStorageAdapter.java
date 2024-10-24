@@ -9,7 +9,6 @@ import org.micromanager.data.*;
 import org.micromanager.data.internal.*;
 import org.micromanager.internal.MMStudio;
 import org.micromanager.internal.propertymap.NonPropertyMapJSONFormats;
-import org.micromanager.internal.utils.ReportingUtils;
 
 import java.io.File;
 import java.io.IOException;
