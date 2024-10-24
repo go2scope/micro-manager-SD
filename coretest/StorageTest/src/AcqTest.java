@@ -103,9 +103,9 @@ public class AcqTest {
             int cap = core.getBufferFreeCapacity();
             System.out.println("Circular buffer free: " + cap + ", acquiring images " + numberOfTimepoints * numberOfChannels);
             core.startSequenceAcquisition(numberOfChannels * numberOfTimepoints, 0.0, true);
-            Thread.sleep(100);
+            Thread.sleep(50); // wait for sequence to start
             int imgind = 0;
-            long start = System.nanoTime();
+            long start = System.currentTimeMillis();
             boolean cameraRunning = core.isSequenceRunning();
             for (int j = 0; j < numberOfTimepoints; j++) {
                 if (core.isBufferOverflowed()) {
@@ -145,14 +145,15 @@ public class AcqTest {
 
                 }
             }
-            long end = System.nanoTime();
+            long end = System.currentTimeMillis();
+            core.stopSequenceAcquisition();
             // we are done so close the dataset
             core.closeDataset(handle);
 
             core.logMessage("END OF ACQUISITION");
 
             // Calculate storage driver bandwidth
-            double elapseds = (end - start) / 1000000000.0;
+            double elapseds = (end - start) / 1000.0;
             double sizemb = 2.0 * numberOfTimepoints * w * h / (1024.0 * 1024.0);
             double bw = sizemb / elapseds;
             System.out.printf("Acquisition completed in %.3f sec\n", elapseds);
