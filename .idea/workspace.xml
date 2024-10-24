@@ -6,7 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="8d70e0f4-7781-4b5f-9d75-346b9df5f083" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/coretest/StorageTest/src/G2SWriteTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/coretest/StorageTest/src/G2SWriteTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -41,7 +40,7 @@
     "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "H:/projects/micro-manager-SD/build/Java/libraries/ImageProcessing.jar",
+    "last_opened_file_path": "C:/projects/micro-manager-SD/coretest/StorageTest",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -65,7 +64,7 @@
       <option name="MAIN_CLASS_NAME" value="ij.ImageJ" />
       <module name="micro-manager-SD" />
       <option name="PROGRAM_PARAMETERS" value="-Xmx8000m -Dforce.annotation.index=true" />
-      <option name="WORKING_DIRECTORY" value="C:/Program Files/Micro-Manager-2.0" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../../Program Files/Micro-Manager-2.0" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -102,6 +101,8 @@
       <workItem from="1729465979469" duration="10000" />
       <workItem from="1729466015022" duration="737000" />
       <workItem from="1729474477132" duration="8726000" />
+      <workItem from="1729657498534" duration="174000" />
+      <workItem from="1729686118763" duration="3679000" />
     </task>
     <servers />
   </component>
