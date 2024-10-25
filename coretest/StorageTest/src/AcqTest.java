@@ -10,7 +10,7 @@ import java.nio.ShortBuffer;
 public class AcqTest {
     public static void main(String[] args) {
         // Test program call syntax:
-        // java -cp <classpath> G2SWriteTest <storage_engine> <data_dir> <channeL_count> <time_points> [direct_io]
+        // java -cp <classpath> AcqTest <storage_engine> <data_dir> <channeL_count> <time_points> [direct_io]
         //
         // First argument determines the storage engine
         // Supported options are:
@@ -40,6 +40,13 @@ public class AcqTest {
         // sixth argument determines flush cycle
         int flushCycle = args.length > 6 ? Integer.parseInt(args[6]) : 0;
 
+        // Seventh argument determines camera device
+        String selcamera = args.length > 7 ? args[7] : "hamamatsu";
+        if(!selcamera.equals("hamamatsu") && !selcamera.equals("demo")) {
+            System.out.println("Invalid camara device selected: " + selcamera);
+            return;
+        }
+
         // instantiate MMCore
         CMMCore core = new CMMCore();
 
@@ -59,20 +66,33 @@ public class AcqTest {
                 core.loadDevice(store, "go2scope", "G2SBigTiffStorage"); // alternative storage driver
 
             // load the demo camera device
-            core.loadDevice(camera, "HamamatsuHam", "HamamatsuHam_DCAM");
+            if(selcamera.equals("hamamatsu"))
+                core.loadDevice(camera, "HamamatsuHam", "HamamatsuHam_DCAM");
+            else
+                core.loadDevice(camera, "DemoCamera", "DCam");
 
             // initialize the system, this will in turn initialize each device
             core.initializeAllDevices();
 
             // configure the camera device
-            core.setProperty(camera, "PixelType", "16bit");
-            core.setROI(1032, 0, 2368, 2368);
-            core.setExposure(5.0);
+            if(selcamera.equals("hamamatsu")) {
+                core.setProperty(camera, "PixelType", "16bit");
+                core.setROI(1032, 0, 2368, 2368);
+                core.setExposure(5.0);
+            } else {
+                core.setProperty(camera, "PixelType", "16bit");
+                core.setProperty(camera, "OnCameraCCDXSize", "4432");
+                core.setProperty(camera, "OnCameraCCDYSize", "2368");
+                core.setExposure(5.0);
+            }
 
             if(storageengine.equals("bigtiff")) {
                 core.setProperty(store, "DirectIO", directio ? 1 : 0);
                 core.setProperty(store, "FlushCycle", flushCycle);
             }
+
+            core.setCircularBufferMemoryFootprint(2000);
+            core.clearCircularBuffer();
 
             // take one image to "warm up" the camera and get actual image dimensions
             core.snapImage();
@@ -94,29 +114,35 @@ public class AcqTest {
             shape.add(h); // second dimension y
             shape.add(numberOfChannels); // channels
             shape.add(numberOfTimepoints); // time points
+            long start = System.nanoTime();
             String handle = core.createDataset(savelocation, "test-" + storageengine, shape, type, "");
+            long endCreate = System.nanoTime();
 
             core.logMessage("Dataset UID: " + handle);
-            core.logMessage("START OF ACQUISITION");
-            core.setCircularBufferMemoryFootprint(2000);
-            core.clearCircularBuffer();
             int cap = core.getBufferFreeCapacity();
             System.out.println("Circular buffer free: " + cap + ", acquiring images " + numberOfTimepoints * numberOfChannels);
+            core.logMessage("START OF ACQUISITION");
             core.startSequenceAcquisition(numberOfChannels * numberOfTimepoints, 0.0, true);
             Thread.sleep(50); // wait for sequence to start
             int imgind = 0;
-            long start = System.currentTimeMillis();
-            boolean cameraRunning = core.isSequenceRunning();
-            for (int j = 0; j < numberOfTimepoints; j++) {
-                if (core.isBufferOverflowed()) {
-                    System.out.println("Buffer overflow!!");
-                    break;
-                }
+            long prepAcq = System.nanoTime();
+            long startAcq = prepAcq;
+            for(int j = 0; j < numberOfTimepoints; j++) {
+                for(int k = 0; k < numberOfChannels; k++) {
+                    if(core.isBufferOverflowed()) {
+                        System.out.println("Buffer overflow!!");
+                        break;
+                    }
+                    long waitStart = System.nanoTime();
+                    while(core.getRemainingImageCount() == 0) { }
+                        //Thread.sleep(10);
+                    if(prepAcq == startAcq)
+                        startAcq = System.nanoTime();
+                    long imgStart = System.nanoTime();
 
-                for (int k = 0; k < numberOfChannels; k++) {
                     // fetch the image
                     img = core.popNextTaggedImage();
-                    cap = core.getBufferFreeCapacity();
+                    long imgPop = System.nanoTime();
 
                     // create coordinates for the image
                     LongVector coords = new LongVector();
@@ -135,30 +161,52 @@ public class AcqTest {
                     img.tags.put("Image-index", imgind);
 
                     // add image to stream
-                    double imgSizeMb = 2.0 * w * h / (1024.0 * 1024.0);
                     long startSave = System.nanoTime();
                     core.addImage(handle, bb.array().length, bb.array(), coords, img.tags.toString());
-                    double imgSaveTime = System.nanoTime() - startSave;
-                    double bw = imgSizeMb / (imgSaveTime / 1000000000.0);
-                    System.out.printf("Saved image %d in %.2f ms, size %.1f MB, bw %.1f MB/s, cap=%d, camera=%s\n",
-                            imgind++, imgSaveTime / 1000000.0, imgSizeMb, bw, cap, cameraRunning ? "running" : "stopped") ;
+                    long endSave = System.nanoTime();
 
+                    // Calculate image statistics
+                    double imgSizeMb = 2.0 * w * h / (1024.0 * 1024.0);
+                    double tAcq = (endSave - imgStart) / 1000000.0;                 // ms
+                    double tPop = (imgPop - imgStart) / 1000000.0;                  // ms
+                    double tCopy = (startSave - imgPop) / 1000000.0;                // ms
+                    double tSave = (endSave - startSave) / 1000000.0;               // ms
+                    double tWait = (imgStart - waitStart) / 1000000.0;              // ms
+                    double bwacq = imgSizeMb / (tAcq / 1000.0);                     // MB/s
+                    double bwpop = imgSizeMb / (tPop / 1000.0);                     // MB/s
+                    double bwcpy = imgSizeMb / (tCopy / 1000.0);                    // MB/s
+                    double bwsav = imgSizeMb / (tSave / 1000.0);                    // MB/s
+                    System.out.printf("Image %d acquired in %.1f ms, size %.1f MB, bw %.1f MB/s, wait time %.1f ms\n", imgind, tAcq, imgSizeMb, bwacq, tWait);
+                    System.out.printf("Image %d saved in %.1f ms (%.1f MB/s), poped in %.1f ms (%.1f MB/s), copied in %.1f ms (%.1f MB/s)\n", imgind, tSave, bwsav, tPop, bwpop, tCopy, bwcpy);
+                    imgind++;
                 }
             }
-            long end = System.currentTimeMillis();
+            long endAcq = System.nanoTime();
             core.stopSequenceAcquisition();
             // we are done so close the dataset
             core.closeDataset(handle);
 
             core.logMessage("END OF ACQUISITION");
+            long end = System.nanoTime();
 
             // Calculate storage driver bandwidth
-            double elapseds = (end - start) / 1000.0;
-            double sizemb = 2.0 * numberOfTimepoints * w * h / (1024.0 * 1024.0);
-            double bw = sizemb / elapseds;
-            System.out.printf("Acquisition completed in %.3f sec\n", elapseds);
-            System.out.printf("Dataset size %.1f MB\n", sizemb);
-            System.out.printf("Storage driver bandwidth %.1f MB/s\n", bw);
+            double imgsizemb = 2.0 * w * h / (1024.0 * 1024.0);
+            double sizemb = numberOfTimepoints * numberOfChannels * imgsizemb;
+            double tTotal = (end - start) / 1000000000.0;
+            double tAcquisition = (endAcq - startAcq) / 1000000000.0;
+            double tPrep = (startAcq - start) / 1000000000.0;
+            double tCreate = (endCreate - start) / 1000000000.0;
+            double bwtot = sizemb / tTotal;
+            double bwacq = sizemb / tAcquisition;
+            double fpsacq = bwacq / imgsizemb;
+            double fpstot = bwtot / imgsizemb;
+            System.out.printf("\nDataset size %.1f MB\n", sizemb);
+            System.out.printf("Camera prep time %.3f sec\n", tPrep);
+            System.out.printf("Dataset creation time %.3f sec\n", tCreate);
+            System.out.printf("Active acquisition time %.3f sec\n", tAcquisition);
+            System.out.printf("Storage driver bandwidth %.1f MB/s (%.1f fps)\n", bwacq, fpsacq);
+            System.out.printf("Acquisition completed in %.3f sec\n", tTotal);
+            System.out.printf("Acquisition bandwidth %.1f MB/s (%.1f fps)\n\n", bwtot, fpstot);
 
             // unload all devices (not really necessary)
             core.unloadAllDevices();
