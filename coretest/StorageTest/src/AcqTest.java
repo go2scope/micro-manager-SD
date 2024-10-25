@@ -123,6 +123,7 @@ public class AcqTest {
             System.out.println("Circular buffer free: " + cap + ", acquiring images " + numberOfTimepoints * numberOfChannels);
             core.logMessage("START OF ACQUISITION");
             core.startSequenceAcquisition(numberOfChannels * numberOfTimepoints, 0.0, true);
+            ByteBuffer bb = ByteBuffer.allocate(w * h * 2).order(ByteOrder.LITTLE_ENDIAN);
             Thread.sleep(50); // wait for sequence to start
             int imgind = 0;
             long prepAcq = System.nanoTime();
@@ -135,7 +136,6 @@ public class AcqTest {
                     }
                     long waitStart = System.nanoTime();
                     while(core.getRemainingImageCount() == 0) { }
-                        //Thread.sleep(10);
                     if(prepAcq == startAcq)
                         startAcq = System.nanoTime();
                     long imgStart = System.nanoTime();
@@ -151,33 +151,26 @@ public class AcqTest {
                     coords.add(k);
                     coords.add(j);
 
-                    // convert short buffer to byte buffer
-                    // TODO: to avoid this conversion, MMCore storage API needs to support short data type directly
-                    ByteBuffer bb = ByteBuffer.allocate(w * h * 2).order(ByteOrder.LITTLE_ENDIAN);
-                    ShortBuffer sb = bb.asShortBuffer();
-                    sb.put((short[]) img.pix);
-
                     // Add image index to the image metadata
                     img.tags.put("Image-index", imgind);
 
                     // add image to stream
+                    short[] bx = (short[])img.pix;
                     long startSave = System.nanoTime();
-                    core.addImage(handle, bb.array().length, bb.array(), coords, img.tags.toString());
+                    core.addImage(handle, bx.length, bx, coords, img.tags.toString());
                     long endSave = System.nanoTime();
 
                     // Calculate image statistics
                     double imgSizeMb = 2.0 * w * h / (1024.0 * 1024.0);
                     double tAcq = (endSave - imgStart) / 1000000.0;                 // ms
                     double tPop = (imgPop - imgStart) / 1000000.0;                  // ms
-                    double tCopy = (startSave - imgPop) / 1000000.0;                // ms
                     double tSave = (endSave - startSave) / 1000000.0;               // ms
                     double tWait = (imgStart - waitStart) / 1000000.0;              // ms
                     double bwacq = imgSizeMb / (tAcq / 1000.0);                     // MB/s
                     double bwpop = imgSizeMb / (tPop / 1000.0);                     // MB/s
-                    double bwcpy = imgSizeMb / (tCopy / 1000.0);                    // MB/s
                     double bwsav = imgSizeMb / (tSave / 1000.0);                    // MB/s
                     System.out.printf("Image %d acquired in %.1f ms, size %.1f MB, bw %.1f MB/s, wait time %.1f ms\n", imgind, tAcq, imgSizeMb, bwacq, tWait);
-                    System.out.printf("Image %d saved in %.1f ms (%.1f MB/s), poped in %.1f ms (%.1f MB/s), copied in %.1f ms (%.1f MB/s)\n", imgind, tSave, bwsav, tPop, bwpop, tCopy, bwcpy);
+                    System.out.printf("Image %d saved in %.1f ms (%.1f MB/s), poped in %.1f ms (%.1f MB/s)\n", imgind, tSave, bwsav, tPop, bwpop);
                     imgind++;
                 }
             }
