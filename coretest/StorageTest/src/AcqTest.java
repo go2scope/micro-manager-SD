@@ -43,7 +43,7 @@ public class AcqTest {
         // Seventh argument determines camera device
         String selcamera = args.length > 7 ? args[7] : "hamamatsu";
         if(!selcamera.equals("hamamatsu") && !selcamera.equals("demo")) {
-            System.out.println("Invalid camara device selected: " + selcamera);
+            System.out.println("Invalid camera device selected: " + selcamera);
             return;
         }
 
