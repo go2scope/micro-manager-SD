@@ -91,7 +91,7 @@ public class AcqTest {
                 core.setProperty(store, "FlushCycle", flushCycle);
             }
 
-            core.setCircularBufferMemoryFootprint(2000);
+            core.setCircularBufferMemoryFootprint(16384);
             core.clearCircularBuffer();
 
             // take one image to "warm up" the camera and get actual image dimensions
@@ -129,6 +129,8 @@ public class AcqTest {
             long prepAcq = System.nanoTime();
             long startAcq = prepAcq;
             for(int j = 0; j < numberOfTimepoints; j++) {
+                if(j % 16 == 0)
+                    System.out.printf("\nBuffer free space: %d / %d frames\n\n", core.getBufferFreeCapacity(), core.getBufferTotalCapacity());
                 for(int k = 0; k < numberOfChannels; k++) {
                     if(core.isBufferOverflowed()) {
                         System.out.println("Buffer overflow!!");
@@ -173,6 +175,8 @@ public class AcqTest {
                     System.out.printf("Image %d saved in %.1f ms (%.1f MB/s), poped in %.1f ms (%.1f MB/s)\n", imgind, tSave, bwsav, tPop, bwpop);
                     imgind++;
                 }
+                if(core.isBufferOverflowed())
+                    break;
             }
             long endAcq = System.nanoTime();
             core.stopSequenceAcquisition();
