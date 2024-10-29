@@ -7,7 +7,7 @@ import java.nio.ShortBuffer;
 public class G2SWriteTest {
     public static void main(String[] args) {
         // Test program call syntax:
-        // java -cp <classpath> G2SWriteTest <storage_engine> <data_dir> <channeL_count> <time_points> <position_count> [direct_io]
+        // java -cp <classpath> G2SWriteTest <storage_engine> <data_dir> <channeL_count> <time_points> <positions> [direct_io] [flush_cycle]
         //
         // First argument determines the storage engine
         // Supported options are:
@@ -91,11 +91,11 @@ public class G2SWriteTest {
             mmcorej.StorageDataType type = StorageDataType.StorageDataType_GRAY16;
 
             // zarr convention: T, C, Z, Y, X
-            shape.add(w); // first dimension x
-            shape.add(h); // second dimension y
-            shape.add(numberOfChannels); // channels
-            shape.add(numberOfTimepoints); // time points
             shape.add(numberOfPositions); // positions
+            shape.add(numberOfTimepoints); // time points
+            shape.add(numberOfChannels); // channels
+            shape.add(h); // second dimension y
+            shape.add(w); // first dimension x
             String handle = core.createDataset(savelocation, "test-" + storageengine, shape, type, "");
 
             core.logMessage("Dataset UID: " + handle);
@@ -113,11 +113,11 @@ public class G2SWriteTest {
 
                         // create coordinates for the image
                         mmcorej.LongVector coords = new LongVector();
-                        coords.add(0);
-                        coords.add(0);
-                        coords.add(k);
-                        coords.add(j);
                         coords.add(i);
+                        coords.add(j);
+                        coords.add(k);
+                        coords.add(0);
+                        coords.add(0);
 
                         // convert short buffer to byte buffer
                         // TODO: to avoid this conversion, MMCore storage API needs to support short data type directly
@@ -150,10 +150,10 @@ public class G2SWriteTest {
 
             // Calculate storage driver bandwidth
             double elapseds = (end - start) / 1000000000.0;
-            double sizemb = 2.0 * numberOfTimepoints * w * h / (1024.0 * 1024.0);
+            double sizemb = 2.0 * numberOfTimepoints * numberOfChannels * numberOfPositions * w * h / (1024.0 * 1024.0);
             double bw = sizemb / elapseds;
             System.out.printf("Acquisition completed in %.3f sec\n", elapseds);
-            System.out.printf("Dataset size %.1f MB\n", sizemb);
+            System.out.printf("Dataset size %.2f GB\n", sizemb / 1024.0);
             System.out.printf("Storage driver bandwidth %.1f MB/s\n", bw);
 
             // unload all devices (not really necessary)

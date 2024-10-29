@@ -7,7 +7,7 @@ import java.util.Arrays;
 public class G2SReadTest {
     public static void main(String[] args) {
         // Test program call syntax:
-        // java -cp <classpath> G2SReadTest <storage_engine> <data_dir> <dataset_name> [direct_io] [optimized_access]
+        // java -cp <classpath> G2SReadTest <storage_engine> <data_dir> <dataset_name> [direct_io] [optimized_access] [print_meta]
         //
         // First argument determines the storage engine
         // Supported options are:
@@ -15,7 +15,7 @@ public class G2SReadTest {
         // - zarr     : AcquireZarrStorage
         //
         if (args.length < 3) {
-            System.out.println("Usage: java -cp <classpath> G2SReadTest <storage_engine> <data_dir> <dataset_name> [direct_io] [optimized_access]");
+            System.out.println("Usage: java -cp <classpath> G2SReadTest <storage_engine> <data_dir> <dataset_name> [direct_io] [optimized_access] [print_meta]");
             return;
         }
         String storageEngine = args[0];
@@ -61,10 +61,10 @@ public class G2SReadTest {
             mmcorej.LongVector shape = core.getDatasetShape(handle);
             mmcorej.StorageDataType type = core.getDatasetPixelType(handle);
             assert(shape.size() > 2);
-            int w = shape.get(0);
-            int h = shape.get(1);
+            int w = shape.get((int)shape.size() - 1);
+            int h = shape.get((int)shape.size() - 2);
             int numImages = 1;
-            for (int i = 2; i < shape.size(); i++) {
+            for (int i = 0; i < shape.size() - 2; i++) {
                 numImages *= shape.get(i);
             }
             System.out.printf("Dataset: %s, %d x %d, images %d, type %s, loaded in %d ms\n", readDir + "/" + datasetName, w, h,
@@ -95,12 +95,14 @@ public class G2SReadTest {
 
                 if(type == StorageDataType.StorageDataType_GRAY16) {
                     short[] bimage = (short[])img;
-                    double bw = (2 * bimage.length / 1048576.0) / (imgReadTime / 1000000000.0);
-                    System.out.println("Image " + String.format("%3d", i) + ", " + Arrays.toString(intCoords) + " size: " + bimage.length * 2 + ", in " + String.format("%.1f", imgReadTime / 1000000.0) + " ms (" + String.format("%.1f", bw) + " MB/s)");
+                    double isizemb = 2.0 * bimage.length / 1048576.0;
+                    double bw = isizemb / (imgReadTime / 1000000000.0);
+                    System.out.printf("Image %3d, %s size: %.1f MB, in %4.1f ms -> %6.1f MB/s%n", i, Arrays.toString(intCoords), isizemb, imgReadTime / 1000000.0, bw);
                 } else {
                     byte[] bimage = (byte[]) img;
-                    double bw = (bimage.length / 1048576.0) / (imgReadTime / 1000000000.0);
-                    System.out.println("Image " + String.format("%3d", i) + ", " + Arrays.toString(intCoords) + " size: " + bimage.length + ", in " + String.format("%.1f", imgReadTime / 1000000.0) + " ms (" + String.format("%.1f", bw) + " MB/s)");
+                    double isizemb = bimage.length / 1048576.0;
+                    double bw = isizemb / (imgReadTime / 1000000000.0);
+                    System.out.printf("Image %3d, %s size: %.1f MB, in %4.1f ms -> %6.1f MB/s%n", i, Arrays.toString(intCoords), isizemb, imgReadTime / 1000000.0, bw);
                 }
 
                 String meta = core.getImageMeta(handle, coords);
@@ -127,9 +129,9 @@ public class G2SReadTest {
      */
     private static void calcCoordsOptimized(int ind, mmcorej.LongVector shape, mmcorej.LongVector coords) {
         int fx = 0;
-        for(int j = (int)shape.size() - 1; j >= 2; j--) {
+        for(int j = 0; j < (int)shape.size() - 2; j++) {
             int sum = 1;
-            for(int k = 2; k < j; k++)
+            for(int k = j + 1; k < (int)shape.size() - 2; k++)
                 sum *= shape.get(k);
             int ix = (ind - fx) / sum;
             coords.set(j, ix);
@@ -144,9 +146,9 @@ public class G2SReadTest {
      */
     private static void calcCoordsRandom(int ind, mmcorej.LongVector shape, mmcorej.LongVector coords) {
         int fx = 0;
-        for(int j = 2; j < (int)shape.size(); j++) {
+        for(int j = (int)shape.size() - 2; j >= 0; j--) {
             int sum = 1;
-            for(int k = j + 1; k < (int)shape.size(); k++)
+            for(int k = 0; k < j; k++)
                 sum *= shape.get(k);
             int ix = (ind - fx) / sum;
             coords.set(j, ix);

@@ -10,7 +10,7 @@ import java.nio.ShortBuffer;
 public class AcqTest {
     public static void main(String[] args) {
         // Test program call syntax:
-        // java -cp <classpath> AcqTest <storage_engine> <data_dir> <channeL_count> <time_points> [direct_io]
+        // java -cp <classpath> AcqTest <storage_engine> <data_dir> <channeL_count> <time_points> <positions> [direct_io] [flush_cycle] [camera]
         //
         // First argument determines the storage engine
         // Supported options are:
@@ -34,10 +34,13 @@ public class AcqTest {
         // Fourth argument determines number of time points to acquire (2 by default)
         int numberOfTimepoints = args.length > 3 ? Integer.parseInt(args[3]) : 2;
 
-        // fifth argument determines direct or cached I/O
+        // Fifth argument determines number of positions to acquire (1 by default)
+        int numberOfPositions = args.length > 4 ? Integer.parseInt(args[4]) : 1;
+
+        // Sixth argument determines direct or cached I/O
         boolean directio = args.length > 5 && Integer.parseInt(args[5]) == 1;
 
-        // sixth argument determines flush cycle
+        // Seventh argument determines flush cycle
         int flushCycle = args.length > 6 ? Integer.parseInt(args[6]) : 0;
 
         // Seventh argument determines camera device
@@ -91,7 +94,7 @@ public class AcqTest {
                 core.setProperty(store, "FlushCycle", flushCycle);
             }
 
-            core.setCircularBufferMemoryFootprint(16384);
+            core.setCircularBufferMemoryFootprint(8192);
             core.clearCircularBuffer();
 
             // take one image to "warm up" the camera and get actual image dimensions
@@ -110,72 +113,77 @@ public class AcqTest {
             LongVector shape = new LongVector();
             StorageDataType type = StorageDataType.StorageDataType_GRAY16;
 
-            shape.add(w); // first dimension x
-            shape.add(h); // second dimension y
-            shape.add(numberOfChannels); // channels
+            shape.add(numberOfPositions);
             shape.add(numberOfTimepoints); // time points
+            shape.add(numberOfChannels); // channels
+            shape.add(h); // second dimension y
+            shape.add(w); // first dimension x
             long start = System.nanoTime();
             String handle = core.createDataset(savelocation, "test-" + storageengine, shape, type, "");
             long endCreate = System.nanoTime();
 
             core.logMessage("Dataset UID: " + handle);
             int cap = core.getBufferFreeCapacity();
-            System.out.println("Circular buffer free: " + cap + ", acquiring images " + numberOfTimepoints * numberOfChannels);
+            System.out.println("Circular buffer free: " + cap + ", acquiring images " + numberOfTimepoints * numberOfChannels * numberOfPositions);
             core.logMessage("START OF ACQUISITION");
-            core.startSequenceAcquisition(numberOfChannels * numberOfTimepoints, 0.0, true);
-            ByteBuffer bb = ByteBuffer.allocate(w * h * 2).order(ByteOrder.LITTLE_ENDIAN);
-            Thread.sleep(50); // wait for sequence to start
+            core.startSequenceAcquisition(numberOfChannels * numberOfTimepoints * numberOfPositions, 0.0, true);
+
             int imgind = 0;
             long prepAcq = System.nanoTime();
             long startAcq = prepAcq;
-            for(int j = 0; j < numberOfTimepoints; j++) {
-                if(j % 16 == 0)
-                    System.out.printf("\nBuffer free space: %d / %d frames\n\n", core.getBufferFreeCapacity(), core.getBufferTotalCapacity());
-                for(int k = 0; k < numberOfChannels; k++) {
-                    if(core.isBufferOverflowed()) {
-                        System.out.println("Buffer overflow!!");
-                        break;
+            for(int i = 0; i < numberOfPositions; i++) {
+                for(int j = 0; j < numberOfTimepoints; j++) {
+                    if (core.getBufferFreeCapacity() < numberOfChannels * 10)
+                        System.out.printf("\nWARNING!!! Low buffer space %d / %d\n\n", core.getBufferFreeCapacity(), core.getBufferTotalCapacity());
+                    for(int k = 0; k < numberOfChannels; k++) {
+                        if (core.isBufferOverflowed()) {
+                            System.out.println("Buffer overflow!!");
+                            break;
+                        }
+                        long waitStart = System.nanoTime();
+                        while (core.getRemainingImageCount() == 0) { }
+                        if (prepAcq == startAcq)
+                            startAcq = System.nanoTime();
+                        long imgStart = System.nanoTime();
+
+                        // fetch the image
+                        img = core.popNextTaggedImage();
+                        long imgPop = System.nanoTime();
+
+                        // create coordinates for the image
+                        LongVector coords = new LongVector();
+                        coords.add(i);
+                        coords.add(j);
+                        coords.add(k);
+                        coords.add(0);
+                        coords.add(0);
+
+                        // Add image index to the image metadata
+                        img.tags.put("Image-index", imgind);
+
+                        // add image to stream
+                        short[] bx = (short[]) img.pix;
+                        long startSave = System.nanoTime();
+                        core.addImage(handle, bx.length, bx, coords, img.tags.toString());
+                        long endSave = System.nanoTime();
+
+                        // Calculate image statistics
+                        double imgSizeMb = 2.0 * w * h / (1024.0 * 1024.0);
+                        double tAcq = (endSave - imgStart) / 1000000.0;                 // ms
+                        double tPop = (imgPop - imgStart) / 1000000.0;                  // ms
+                        double tSave = (endSave - startSave) / 1000000.0;               // ms
+                        double tWait = (imgStart - waitStart) / 1000000.0;              // ms
+                        double bwacq = imgSizeMb / (tAcq / 1000.0);                     // MB/s
+                        double bwpop = imgSizeMb / (tPop / 1000.0);                     // MB/s
+                        double bwsav = imgSizeMb / (tSave / 1000.0);                    // MB/s
+                        System.out.printf("Image %d acquired in %.1f ms, size %.1f MB, bw %.1f MB/s, wait time %.1f ms\n", imgind, tAcq, imgSizeMb, bwacq, tWait);
+                        System.out.printf("Image %d saved in %.1f ms (%.1f MB/s), poped in %.1f ms (%.1f MB/s)\n", imgind, tSave, bwsav, tPop, bwpop);
+                        imgind++;
                     }
-                    long waitStart = System.nanoTime();
-                    while(core.getRemainingImageCount() == 0) { }
-                    if(prepAcq == startAcq)
-                        startAcq = System.nanoTime();
-                    long imgStart = System.nanoTime();
-
-                    // fetch the image
-                    img = core.popNextTaggedImage();
-                    long imgPop = System.nanoTime();
-
-                    // create coordinates for the image
-                    LongVector coords = new LongVector();
-                    coords.add(0);
-                    coords.add(0);
-                    coords.add(k);
-                    coords.add(j);
-
-                    // Add image index to the image metadata
-                    img.tags.put("Image-index", imgind);
-
-                    // add image to stream
-                    short[] bx = (short[])img.pix;
-                    long startSave = System.nanoTime();
-                    core.addImage(handle, bx.length, bx, coords, img.tags.toString());
-                    long endSave = System.nanoTime();
-
-                    // Calculate image statistics
-                    double imgSizeMb = 2.0 * w * h / (1024.0 * 1024.0);
-                    double tAcq = (endSave - imgStart) / 1000000.0;                 // ms
-                    double tPop = (imgPop - imgStart) / 1000000.0;                  // ms
-                    double tSave = (endSave - startSave) / 1000000.0;               // ms
-                    double tWait = (imgStart - waitStart) / 1000000.0;              // ms
-                    double bwacq = imgSizeMb / (tAcq / 1000.0);                     // MB/s
-                    double bwpop = imgSizeMb / (tPop / 1000.0);                     // MB/s
-                    double bwsav = imgSizeMb / (tSave / 1000.0);                    // MB/s
-                    System.out.printf("Image %d acquired in %.1f ms, size %.1f MB, bw %.1f MB/s, wait time %.1f ms\n", imgind, tAcq, imgSizeMb, bwacq, tWait);
-                    System.out.printf("Image %d saved in %.1f ms (%.1f MB/s), poped in %.1f ms (%.1f MB/s)\n", imgind, tSave, bwsav, tPop, bwpop);
-                    imgind++;
+                    if (core.isBufferOverflowed())
+                        break;
                 }
-                if(core.isBufferOverflowed())
+                if (core.isBufferOverflowed())
                     break;
             }
             long endAcq = System.nanoTime();
@@ -188,7 +196,7 @@ public class AcqTest {
 
             // Calculate storage driver bandwidth
             double imgsizemb = 2.0 * w * h / (1024.0 * 1024.0);
-            double sizemb = numberOfTimepoints * numberOfChannels * imgsizemb;
+            double sizemb = imgind * imgsizemb;
             double tTotal = (end - start) / 1000000000.0;
             double tAcquisition = (endAcq - startAcq) / 1000000000.0;
             double tPrep = (startAcq - start) / 1000000000.0;
@@ -197,7 +205,7 @@ public class AcqTest {
             double bwacq = sizemb / tAcquisition;
             double fpsacq = bwacq / imgsizemb;
             double fpstot = bwtot / imgsizemb;
-            System.out.printf("\nDataset size %.1f MB\n", sizemb);
+            System.out.printf("\nDataset size %.2f GB, %d / %d images acquired\n", sizemb / 1024.0, imgind, numberOfTimepoints * numberOfChannels * numberOfPositions);
             System.out.printf("Camera prep time %.3f sec\n", tPrep);
             System.out.printf("Dataset creation time %.3f sec\n", tCreate);
             System.out.printf("Active acquisition time %.3f sec\n", tAcquisition);
