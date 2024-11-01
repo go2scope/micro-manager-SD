@@ -9,6 +9,7 @@ import org.micromanager.data.*;
 import org.micromanager.data.internal.*;
 import org.micromanager.internal.MMStudio;
 import org.micromanager.internal.propertymap.NonPropertyMapJSONFormats;
+import org.micromanager.internal.utils.ReportingUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -115,14 +116,24 @@ public class MMCStorageAdapter implements Storage {
 
       // create an array of intended dimensions
       LongVector dimensions = new LongVector();
-      // first add x and y
-      dimensions.add(summaryMetadata.getImageWidth());
-      dimensions.add(summaryMetadata.getImageHeight());
-      for (String axis : coordinates.getAxes()) {
+
+      // add dimensions other than x and y
+      // micro-manager dimensions are always presented in the same order: C, P, T, Z (P means position)
+      // the actual shape must be determined from the acquisition order
+      summary.getOrderedAxes().forEach(axis -> {
          dimensions.add(coordinates.getIndex(axis));
-      }
+         ReportingUtils.logMessage("Axis: " + axis + " Index: " + coordinates.getIndex(axis));
+      });
+
+      // then add y and x
+      dimensions.add(summaryMetadata.getImageHeight());
+      dimensions.add(summaryMetadata.getImageWidth());
+
+      // serialize summary metadata to string
       String summaryMDString = NonPropertyMapJSONFormats.summaryMetadata().toJSON(
                  ((DefaultSummaryMetadata) summary).toPropertyMap());
+
+      // create the dataset
       try {
          dsHandle = mmcStorage.createDataset(new File(store.getSavePath()).getParent(),
                  store.getName(),
@@ -206,6 +217,9 @@ public class MMCStorageAdapter implements Storage {
 
    @Override
    public Image getAnyImage() {
+      // TODO: this method is used when reading the file and its purpose is to determine image dimensions to check whether
+      // there is enough RAM
+      // the current implementation is not correct as writtenCoords are not populated on load
       synchronized(writtenCoords) {
          // Check cache
          if(!writtenCoords.isEmpty()) {
@@ -274,6 +288,7 @@ public class MMCStorageAdapter implements Storage {
    }
 
    @Override
+   // TODO: this should be obtained from the loaded dataset
    public List<String> getAxes() {
       if (getSummaryMetadata() == null) {
          return null;
@@ -321,24 +336,36 @@ public class MMCStorageAdapter implements Storage {
       }
    }
 
+   /**
+    * Create a LongVector of coordinates for the MMCore storage device from micromanager coordinates
+    * @param coords - coordinate object
+    * @return - long vector of zarr-like coordinates
+    */
    private LongVector calcCoords(Coords coords) {
-      LongVector ret = new LongVector();
+      LongVector normalizedCoordinates = new LongVector();
       if(dsHandle.isEmpty())
-         return ret;
+         return normalizedCoordinates; // empty vector
+
       Coords dims = summaryMetadata.getIntendedDimensions();
       if(dims == null || dims.getAxes().isEmpty())
-         return ret;
-      ret.add(0);       // Width
-      ret.add(0);       // Height
-      for(String axis : dims.getAxes()) {
+         return normalizedCoordinates; // empty vector
+
+      for(String axis : summaryMetadata.getOrderedAxes()) {
          int index = coords.getIndex(axis);
-         if(index >= dims.getIndex(axis))
-            index = dims.getIndex(axis);
-         ret.add(index);
+         normalizedCoordinates.add(index);
       }
-      return ret;
+      normalizedCoordinates.add(0);       // Height
+      normalizedCoordinates.add(0);       // Width
+
+      return normalizedCoordinates;
    }
 
+   /**
+    * Check if the given coordinates are valid for the dataset
+    * TODO: the meaning of this method is not clear, maybe it tells us whether the image is already written
+    * @param coords
+    * @return
+    */
    private boolean hasCoords(Coords coords) {
       if(dsHandle.isEmpty())
          return false;

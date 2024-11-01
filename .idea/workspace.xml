@@ -5,8 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8d70e0f4-7781-4b5f-9d75-346b9df5f083" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/coretest/StorageTest/src/AcqTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/coretest/StorageTest/src/G2SWriteTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/coretest/StorageTest/src/G2SWriteTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mmCoreAndDevices" beforeDir="false" afterPath="$PROJECT_DIR$/mmCoreAndDevices" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mmCoreAndDevices/DeviceAdapters/go2scope/AcqZarrStorage.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/mmCoreAndDevices/DeviceAdapters/go2scope/AcqZarrStorage.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mmCoreAndDevices/micromanager.sln" beforeDir="false" afterPath="$PROJECT_DIR$/mmCoreAndDevices/micromanager.sln" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/DefaultDataManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/DefaultDataManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/mmcstore/MMCStorageAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/mmcstore/MMCStorageAdapter.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -65,7 +70,7 @@
       <option name="MAIN_CLASS_NAME" value="ij.ImageJ" />
       <module name="micro-manager-SD" />
       <option name="PROGRAM_PARAMETERS" value="-Xmx8000m -Dforce.annotation.index=true" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../../Program Files/Micro-Manager-2.0" />
+      <option name="WORKING_DIRECTORY" value="C:/Program Files/Micro-Manager-2.0" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -105,6 +110,7 @@
       <workItem from="1729657498534" duration="174000" />
       <workItem from="1729686118763" duration="3679000" />
       <workItem from="1729738451842" duration="16000" />
+      <workItem from="1730415367344" duration="7401000" />
     </task>
     <servers />
   </component>
@@ -115,13 +121,8 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/pipeline/DefaultPipeline.java</url>
-          <line>81</line>
-          <option name="timeStamp" value="6" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/mmcstore/MMCStorageAdapter.java</url>
-          <line>40</line>
+          <line>41</line>
           <option name="timeStamp" value="8" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
@@ -130,9 +131,14 @@
           <option name="timeStamp" value="10" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/acquisition/internal/MMAcquisition.java</url>
-          <line>525</line>
-          <option name="timeStamp" value="11" />
+          <url>file://$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/DefaultDataManager.java</url>
+          <line>218</line>
+          <option name="timeStamp" value="16" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/DefaultDataManager.java</url>
+          <line>245</line>
+          <option name="timeStamp" value="19" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

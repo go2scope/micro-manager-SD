@@ -45,6 +45,7 @@ import org.micromanager.data.ProcessorFactory;
 import org.micromanager.data.ProcessorPlugin;
 import org.micromanager.data.RewritableDatastore;
 import org.micromanager.data.SummaryMetadata;
+import org.micromanager.data.internal.mmcstore.MMCStorageAdapter;
 import org.micromanager.data.internal.multipagetiff.MultipageTiffReader;
 import org.micromanager.data.internal.multipagetiff.StorageMultipageTiff;
 import org.micromanager.data.internal.ndtiff.NDTiffAdapter;
@@ -213,27 +214,30 @@ public final class DefaultDataManager implements DataManager {
          throws IOException {
       // If the user selected a TIFF file, select the directory the file is in
       File dirFile = new File(directory);
-      if (!dirFile.isDirectory()) {
-         directory = dirFile.getParent();
-      }
       DefaultDatastore result = new DefaultDatastore(studio_);
-      // TODO: future additional file formats will need to be handled here.
-      // For now we just choose between StorageMultipageTiff and
-      // StorageSinglePlaneTiffSeries.
-      boolean isMultipageTiff = MultipageTiffReader.isMMMultipageTiff(directory);
-      boolean isNDTiff = NDTiffAdapter.isNDTiffDataSet(directory); // TODO: add check
-      if (isNDTiff && isMultipageTiff) {
-         throw new RuntimeException("Cannot be both NDTiff and MultipageTiff");
-      }
-      if (isNDTiff) {
-         result.setStorage(new NDTiffAdapter(result, directory, false));
-      } else if (isMultipageTiff) {
-         result.setStorage(new StorageMultipageTiff(parent, result, directory, false));
+      if (!dirFile.isDirectory()) {
+         // if dir file is not a dir it must be a bigtiff file
+         // TODO: this logic is too naive we should check if it is a bigtiff file
+         // directory = dirFile.getParent();
       } else {
-         result.setStorage(new StorageSinglePlaneTiffSeries(result, directory,
-               false));
-      }
 
+         // TODO: future additional file formats will need to be handled here.
+         // For now we just choose between StorageMultipageTiff and
+         // StorageSinglePlaneTiffSeries.
+         boolean isMultipageTiff = MultipageTiffReader.isMMMultipageTiff(directory);
+         boolean isNDTiff = NDTiffAdapter.isNDTiffDataSet(directory); // TODO: add check
+         if (isNDTiff && isMultipageTiff) {
+            throw new RuntimeException("Cannot be both NDTiff and MultipageTiff");
+         }
+         if (isNDTiff) {
+            result.setStorage(new NDTiffAdapter(result, directory, false));
+         } else if (isMultipageTiff) {
+            result.setStorage(new StorageMultipageTiff(parent, result, directory, false));
+         } else {
+            result.setStorage(new StorageSinglePlaneTiffSeries(result, directory,
+                    false));
+         }
+      }
 
       if (!isVirtual) {
          // Check for available RAM. I'm fairly certain that we should only

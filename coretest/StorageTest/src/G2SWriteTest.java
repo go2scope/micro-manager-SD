@@ -35,7 +35,7 @@ public class G2SWriteTest {
         int numberOfPositions = args.length > 4 ? Integer.parseInt(args[4]) : 1;
 
         // Sixth argument determines direct or cached I/O
-        boolean directio = args.length > 5 && Integer.parseInt(args[5]) == 1;
+        boolean directIo = args.length > 5 && Integer.parseInt(args[5]) == 1;
 
         // Seventh argument determines flush cycle
         int flushCycle = args.length > 6 ? Integer.parseInt(args[6]) : 0;
@@ -71,7 +71,7 @@ public class G2SWriteTest {
             core.setExposure(10.0);
 
             if(storageengine.equals("bigtiff")) {
-                core.setProperty(store, "DirectIO", directio ? 1 : 0);
+                core.setProperty(store, "DirectIO", directIo ? 1 : 0);
                 core.setProperty(store, "FlushCycle", flushCycle);
             }
 
@@ -102,9 +102,9 @@ public class G2SWriteTest {
             core.logMessage("START OF ACQUISITION");
             int imgind = 0;
             long start = System.nanoTime();
-            for(int i = 0; i < numberOfPositions; i++) {
-                for (int j = 0; j < numberOfTimepoints; j++) {
-                    for (int k = 0; k < numberOfChannels; k++) {
+            for(int p = 0; p < numberOfPositions; p++) {
+                for (int t = 0; t < numberOfTimepoints; t++) {
+                    for (int c = 0; c < numberOfChannels; c++) {
                         // snap an image
                         core.snapImage();
 
@@ -113,9 +113,9 @@ public class G2SWriteTest {
 
                         // create coordinates for the image
                         mmcorej.LongVector coords = new LongVector();
-                        coords.add(i);
-                        coords.add(j);
-                        coords.add(k);
+                        coords.add(p);
+                        coords.add(t);
+                        coords.add(c);
                         coords.add(0);
                         coords.add(0);
 
