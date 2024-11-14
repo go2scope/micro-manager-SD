@@ -8,10 +8,6 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/coretest/StorageTest/src/G2SWriteTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/coretest/StorageTest/src/G2SWriteTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mmCoreAndDevices" beforeDir="false" afterPath="$PROJECT_DIR$/mmCoreAndDevices" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmCoreAndDevices/DeviceAdapters/go2scope/AcqZarrStorage.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/mmCoreAndDevices/DeviceAdapters/go2scope/AcqZarrStorage.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmCoreAndDevices/micromanager.sln" beforeDir="false" afterPath="$PROJECT_DIR$/mmCoreAndDevices/micromanager.sln" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/DefaultDataManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/DefaultDataManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/mmcstore/MMCStorageAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/mmcstore/MMCStorageAdapter.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,7 +35,7 @@
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
-    &quot;Application.MicroManager.executor&quot;: &quot;Debug&quot;,
+    &quot;Application.MicroManager.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
@@ -79,8 +75,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-9823dce3aa75-28b599e66164-intellij.indexing.shared.core-IU-242.23339.11" />
-        <option value="bundled-js-predefined-d6986cc7102b-5c90d61e3bab-JavaScript-IU-242.23339.11" />
+        <option value="bundled-jdk-9823dce3aa75-28b599e66164-intellij.indexing.shared.core-IU-242.23726.103" />
+        <option value="bundled-js-predefined-d6986cc7102b-5c90d61e3bab-JavaScript-IU-242.23726.103" />
       </set>
     </attachedChunks>
   </component>
@@ -110,7 +106,14 @@
       <workItem from="1729657498534" duration="174000" />
       <workItem from="1729686118763" duration="3679000" />
       <workItem from="1729738451842" duration="16000" />
-      <workItem from="1730415367344" duration="7401000" />
+      <workItem from="1730415367344" duration="8119000" />
+      <workItem from="1730484327625" duration="862000" />
+      <workItem from="1730493375648" duration="2580000" />
+      <workItem from="1730516516185" duration="348000" />
+      <workItem from="1730740842418" duration="2495000" />
+      <workItem from="1731097411688" duration="4562000" />
+      <workItem from="1731517779450" duration="813000" />
+      <workItem from="1731610253565" duration="783000" />
     </task>
     <servers />
   </component>
@@ -121,23 +124,13 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/mmcstore/MMCStorageAdapter.java</url>
-          <line>41</line>
-          <option name="timeStamp" value="8" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/DefaultDataSaver.java</url>
           <line>63</line>
           <option name="timeStamp" value="10" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/DefaultDataManager.java</url>
-          <line>218</line>
-          <option name="timeStamp" value="16" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/DefaultDataManager.java</url>
-          <line>245</line>
+          <line>241</line>
           <option name="timeStamp" value="19" />
         </line-breakpoint>
       </breakpoints>

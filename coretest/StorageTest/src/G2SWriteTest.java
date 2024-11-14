@@ -102,6 +102,9 @@ public class G2SWriteTest {
             core.logMessage("START OF ACQUISITION");
             int imgind = 0;
             long start = System.nanoTime();
+            double imgSaveTimeSumMs = 0.0;
+            double imgSaveTimeMaxMs = 0;
+            double imgSaveTimeMinMs = Long.MAX_VALUE;
             for(int p = 0; p < numberOfPositions; p++) {
                 for (int t = 0; t < numberOfTimepoints; t++) {
                     for (int c = 0; c < numberOfChannels; c++) {
@@ -113,11 +116,11 @@ public class G2SWriteTest {
 
                         // create coordinates for the image
                         mmcorej.LongVector coords = new LongVector();
-                        coords.add(p);
-                        coords.add(t);
-                        coords.add(c);
-                        coords.add(0);
-                        coords.add(0);
+                        coords.add(p); // position
+                        coords.add(t); // time point
+                        coords.add(c); // channel
+                        coords.add(0); // y
+                        coords.add(0); // x
 
                         // convert short buffer to byte buffer
                         // TODO: to avoid this conversion, MMCore storage API needs to support short data type directly
@@ -130,11 +133,14 @@ public class G2SWriteTest {
 
                         // add image to stream
                         double imgSizeMb = 2.0 * w * h / (1024.0 * 1024.0);
-                        long startSave = System.nanoTime();
+                        long startSaveNs = System.nanoTime();
                         core.addImage(handle, bb.array().length, bb.array(), coords, img.tags.toString());
-                        double imgSaveTime = System.nanoTime() - startSave;
-                        double bw = imgSizeMb / (imgSaveTime / 1000000000.0);
-                        System.out.printf("Saved image %d in %.2f ms, size %.1f MB, bw %.1f MB/s\n", imgind++, imgSaveTime / 1000000.0, imgSizeMb, bw);
+                        double imgSaveTimeMs = (System.nanoTime() - startSaveNs)/1.0e6;
+                        double bw = imgSizeMb / (imgSaveTimeMs / 1.0e3);
+                        imgSaveTimeSumMs += imgSaveTimeMs;
+                        imgSaveTimeMaxMs = Math.max(imgSaveTimeMaxMs, imgSaveTimeMs);
+                        imgSaveTimeMinMs = Math.min(imgSaveTimeMinMs, imgSaveTimeMs);
+                        System.out.printf("Saved image %d in %.2f ms, size %.1f MB, bw %.1f MB/s\n", imgind++, imgSaveTimeMs, imgSizeMb, bw);
                     }
                 }
             }
@@ -143,19 +149,24 @@ public class G2SWriteTest {
             long startClose = System.nanoTime();
             core.closeDataset(handle);
             long end = System.nanoTime();
-            double imgSaveTime = (end - startClose) / 1000000.0;
-            System.out.printf("Image close time %.2f ms\n", imgSaveTime);
+            double imgSaveTimeTotalMs = (end - startClose) / 1.0e6;
+            System.out.printf("Image close time %.2f ms\n", imgSaveTimeTotalMs);
 
             core.logMessage("END OF ACQUISITION");
 
             // Calculate storage driver bandwidth
-            double elapseds = (end - start) / 1000000000.0;
+            double elapseds = (end - start) / 1.0e9;
             double sizemb = 2.0 * numberOfTimepoints * numberOfChannels * numberOfPositions * w * h / (1024.0 * 1024.0);
             double bw = sizemb / elapseds;
             System.out.printf("Acquisition completed in %.3f sec\n", elapseds);
             System.out.printf("Dataset size %.2f GB\n", sizemb / 1024.0);
             System.out.printf("Storage driver bandwidth %.1f MB/s\n", bw);
-
+            System.out.printf("Average image save time %.2f ms, min=%.2f ms, max=%.2f ms\n",
+                    imgSaveTimeSumMs / (numberOfTimepoints * numberOfChannels * numberOfPositions),
+                    imgSaveTimeMinMs,
+                    imgSaveTimeMaxMs);
+            if (storageengine.equals("bigtiff"))
+                System.out.printf("Direct io: %b, flush cycle: %d\n", directIo, flushCycle);
             // unload all devices (not really necessary)
             core.unloadAllDevices();
 
