@@ -1,10 +1,9 @@
 package org.lumencor.targa;
 
 import mmcorej.CMMCore;
-import org.micromanager.Studio;
-import org.micromanager.internal.MMStudio;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
@@ -19,7 +18,7 @@ import org.micromanager.internal.utils.FileDialogs;
  * Targa acquisition plugin main window
  * @author Milos Jovanovic <milos@tehnocad.rs>
  */
-public class TargaAcqWindow extends JFrame {
+public class TargaAcqWindow extends JFrame implements AcqRunnerListener {
 	private final static String CFG_LOCATION = "DataDir";
 	private final static String CFG_NAME = "NAME";
 	private final static String CFG_TIMEPOINTS = "TimePoints";
@@ -34,6 +33,8 @@ public class TargaAcqWindow extends JFrame {
 	private final JFormattedTextField tbTimePoints_;
 	private final JFormattedTextField tbTimeInterval_;
 	private final JCheckBox cbTimeLapse_;
+	private final JButton loadButton_;
+	private final JButton chooseLocationButton_;
 	private final JButton startAcqButton_;
 	private final JButton stopAcqButton_;
 	private final JButton channelAddButton_;
@@ -49,13 +50,14 @@ public class TargaAcqWindow extends JFrame {
 	private final JLabel labelPixelSize_;
 	private final JProgressBar progressBar_;
 
-	private CMMCore core_;
+	private final CMMCore core_;
+	private final Vector<String> channels_;
 	private String dataDir_;
 	private String acqName_;
 	private int timePoints_;
 	private int timeIntervalMs_;
-	private boolean timeLapse_;
-	private Vector<String> channels_;
+	private boolean runnerActive_;
+	private AcqRunner worker_;
 
 	/**
 	 * Class constructor
@@ -63,6 +65,7 @@ public class TargaAcqWindow extends JFrame {
 	 */
 	TargaAcqWindow(CMMCore studio) {
 		super();
+		runnerActive_ = false;
 		core_ = studio;
 		channels_ = new Vector<>();
 
@@ -114,14 +117,14 @@ public class TargaAcqWindow extends JFrame {
 		layout.putConstraint(SpringLayout.EAST, tbLocation_, -50, SpringLayout.EAST, contentPane);
 		layout.putConstraint(SpringLayout.NORTH, tbLocation_, 10, SpringLayout.NORTH, contentPane);
 
-		JButton browseLocationButton = new JButton("...");
-		browseLocationButton.setToolTipText("Browse");
-		browseLocationButton.setMargin(new Insets(2, 5, 2, 5));
-		browseLocationButton.setFont(new Font("Dialog", Font.PLAIN, 12));
-		browseLocationButton.addActionListener((final ActionEvent e) -> setSaveLocation());
-		contentPane.add(browseLocationButton);
-		layout.putConstraint(SpringLayout.WEST, browseLocationButton, 5, SpringLayout.EAST, tbLocation_);
-		layout.putConstraint(SpringLayout.NORTH, browseLocationButton, 2, SpringLayout.NORTH, tbLocation_);
+		chooseLocationButton_ = new JButton("...");
+		chooseLocationButton_.setToolTipText("Browse");
+		chooseLocationButton_.setMargin(new Insets(2, 5, 2, 5));
+		chooseLocationButton_.setFont(new Font("Dialog", Font.PLAIN, 12));
+		chooseLocationButton_.addActionListener((final ActionEvent e) -> setSaveLocation());
+		contentPane.add(chooseLocationButton_);
+		layout.putConstraint(SpringLayout.WEST, chooseLocationButton_, 5, SpringLayout.EAST, tbLocation_);
+		layout.putConstraint(SpringLayout.NORTH, chooseLocationButton_, 2, SpringLayout.NORTH, tbLocation_);
 
 		// Add acquisition name label
 		final JLabel labelName = new JLabel("File Name");
@@ -138,13 +141,13 @@ public class TargaAcqWindow extends JFrame {
 		layout.putConstraint(SpringLayout.NORTH, tbName_, 40, SpringLayout.NORTH, contentPane);
 
 		// Add load acquisition button
-		JButton loadAcqButton = new JButton("Load Acquisition");
-		loadAcqButton.setToolTipText("Load Existing Acquisition Data");
-		loadAcqButton.setMargin(new Insets(5, 15, 5, 15));
-		loadAcqButton.addActionListener((final ActionEvent e) -> loadAcquisition());
-		contentPane.add(loadAcqButton);
-		layout.putConstraint(SpringLayout.EAST, loadAcqButton, 0, SpringLayout.EAST, tbName_);
-		layout.putConstraint(SpringLayout.NORTH, loadAcqButton, 10, SpringLayout.SOUTH, tbName_);
+		loadButton_ = new JButton("Load Acquisition");
+		loadButton_.setToolTipText("Load Existing Acquisition Data");
+		loadButton_.setMargin(new Insets(5, 15, 5, 15));
+		loadButton_.addActionListener((final ActionEvent e) -> loadAcquisition());
+		contentPane.add(loadButton_);
+		layout.putConstraint(SpringLayout.EAST, loadButton_, 0, SpringLayout.EAST, tbName_);
+		layout.putConstraint(SpringLayout.NORTH, loadButton_, 10, SpringLayout.SOUTH, tbName_);
 
 		// Add timepoints label
 		final JLabel labelTimepoints = new JLabel("Timepoints");
@@ -192,6 +195,7 @@ public class TargaAcqWindow extends JFrame {
 		listChannels_.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		listChannels_.setLayoutOrientation(JList.VERTICAL);
 		listChannels_.setVisibleRowCount(-1);
+		listChannels_.addListSelectionListener((ListSelectionEvent e) -> updateChannelCommands());
 		JScrollPane listScroller = new JScrollPane(listChannels_);
 		listScroller.setPreferredSize(new Dimension(180, 150));
 		contentPane.add(listScroller);
@@ -329,7 +333,7 @@ public class TargaAcqWindow extends JFrame {
 		prefs.put(CFG_LOCATION, dataDir_);
 		prefs.put(CFG_NAME, acqName_);
 		prefs.putInt(CFG_TIMEPOINTS, timePoints_);
-		prefs.putBoolean(CFG_TIMELAPSE, timeLapse_);
+		prefs.putBoolean(CFG_TIMELAPSE, cbTimeLapse_.isSelected());
 		prefs.putInt(CFG_TIMEINTERVAL, timeIntervalMs_);
 		prefs.put(CFG_CHANNELS, chlist.toString());
 		prefs.putInt(CFG_WNDX, super.getBounds().x);
@@ -348,24 +352,28 @@ public class TargaAcqWindow extends JFrame {
 		dataDir_ = prefs.get(CFG_LOCATION, "");
 		acqName_ = prefs.get(CFG_NAME, "");
 		timePoints_ = prefs.getInt(CFG_TIMEPOINTS, 1);
-		timeLapse_ = prefs.getBoolean(CFG_TIMELAPSE, false);
 		timeIntervalMs_ = prefs.getInt(CFG_TIMEINTERVAL, 100);
+		boolean tl = prefs.getBoolean(CFG_TIMELAPSE, false);
 		int wndx = prefs.getInt(CFG_WNDX, super.getBounds().x);
 		int wndy = prefs.getInt(CFG_WNDY, super.getBounds().y);
 		String chlist = prefs.get(CFG_CHANNELS, "");
 		channels_.clear();
-		channels_.addAll(Arrays.asList(chlist.split(",")));
+		if(!chlist.isEmpty())
+			channels_.addAll(Arrays.asList(chlist.split(",")));
 
 		// Update UI
 		tbLocation_.setText(dataDir_);
 		tbName_.setText(acqName_);
 		tbTimePoints_.setValue(timePoints_);
-		cbTimeLapse_.setSelected(timeLapse_);
+		cbTimeLapse_.setSelected(tl);
 		tbTimeInterval_.setValue(timeIntervalMs_);
 		listChannels_.setListData(channels_);
 		super.setLocation(wndx, wndy);
 	}
 
+	/**
+	 * Load existing data acquisition
+	 */
 	protected void loadAcquisition() {
 
 	}
@@ -374,34 +382,130 @@ public class TargaAcqWindow extends JFrame {
 	 * Start data acquisition
 	 */
 	protected void startAcquisition() {
-		startAcqButton_.setVisible(false);
-		stopAcqButton_.setVisible(true);
-		progressBar_.setVisible(true);
+		runnerActive_ = true;
+		worker_ = new AcqRunner(core_, dataDir_, acqName_, cbTimeLapse_.isSelected(), timePoints_, channels_, timeIntervalMs_);
+		worker_.addListener(this);
+		worker_.start();
+		updateFormState();
+		updateChannelCommands();
 	}
 
 	/**
 	 * Stop / cancel data acquisition
 	 */
 	protected void stopAcquisition() {
-		startAcqButton_.setVisible(true);
-		stopAcqButton_.setVisible(false);
-		progressBar_.setVisible(false);
+		runnerActive_ = false;
+		worker_.cancel();
+		try {
+			if(worker_.isAlive())
+				worker_.join();
+		}catch(InterruptedException e) {
+			e.printStackTrace();
+		}
+		worker_ = null;
+		updateFormState();
+		updateChannelCommands();
 	}
 
+	/**
+	 * Add channel
+	 */
 	protected void addChannel() {
+		// Obtain channels list
+		String[] channelSource = { "CYAN", "GREEN", "RED", "UV", "TEAL" }; // TODO: Obtain channels from the light engine device adapter
+		Vector<String> allchannels = new Vector<>();
+		for(String s : channelSource) {
+			if(channels_.contains(s))
+				continue;
+			allchannels.add(s);
+		}
 
+		// Show channel selection dialog
+		ChannelSelectionDlg wnd = new ChannelSelectionDlg(this, allchannels);
+		wnd.setVisible(true);
+
+		String schannel = wnd.getSelectedChannel();
+		if(schannel == null || schannel.isEmpty())
+			return;
+		channels_.add(schannel);
+		listChannels_.setListData(channels_);
+		updateAcqInfo(false);
 	}
 
+	/**
+	 * Remove selected channel
+	 */
 	protected void removeChannel() {
+		if(listChannels_.getSelectedIndex() < 0 || listChannels_.getSelectedIndex() >= channels_.size())
+			return;
 
+		channels_.remove(listChannels_.getSelectedIndex());
+		listChannels_.setListData(channels_);
+		updateAcqInfo(false);
 	}
 
+	/**
+	 * Move selected channel up
+	 */
 	protected void moveChannelUp() {
+		int ind = listChannels_.getSelectedIndex();
+		if(ind < 1 || ind >= channels_.size())
+			return;
 
+		// Switch channels
+		String tmp = channels_.get(ind);
+		channels_.set(ind, channels_.get(ind - 1));
+		channels_.set(ind - 1, tmp);
+
+		// Update UI
+		listChannels_.setListData(channels_);
+		listChannels_.setSelectedIndex(ind - 1);
 	}
 
+	/**
+	 * Move selected channel down
+	 */
 	protected void moveChannelDown() {
+		int ind = listChannels_.getSelectedIndex();
+		if(ind < 0 || ind >= channels_.size() - 1)
+			return;
 
+		// Switch channels
+		String tmp = channels_.get(ind);
+		channels_.set(ind, channels_.get(ind + 1));
+		channels_.set(ind + 1, tmp);
+
+		// Update UI
+		listChannels_.setListData(channels_);
+		listChannels_.setSelectedIndex(ind + 1);
+	}
+
+	/**
+	 * Update channel list command buttons
+	 */
+	protected void updateChannelCommands() {
+		int ind = listChannels_.getSelectedIndex();
+		channelAddButton_.setEnabled(!runnerActive_);
+		channelRemoveButton_.setEnabled(!runnerActive_ && listChannels_.getSelectedIndex() >= 0 && !channels_.isEmpty());
+		channelUpButton_.setEnabled(!runnerActive_ && listChannels_.getSelectedIndex() > 0 && !channels_.isEmpty());
+		channelDownButton_.setEnabled(!runnerActive_ && listChannels_.getSelectedIndex() >= 0 && listChannels_.getSelectedIndex() < channels_.size() - 1);
+	}
+
+	/**
+	 * Update UI state based on the acquisition status
+	 */
+	protected void updateFormState() {
+		startAcqButton_.setVisible(!runnerActive_);
+		stopAcqButton_.setVisible(runnerActive_);
+		progressBar_.setVisible(runnerActive_);
+		tbTimePoints_.setEnabled(!runnerActive_);
+		tbTimeInterval_.setEnabled(!runnerActive_);
+		cbTimeLapse_.setEnabled(!runnerActive_);
+		tbLocation_.setEnabled(!runnerActive_);
+		tbName_.setEnabled(!runnerActive_);
+		loadButton_.setEnabled(!runnerActive_);
+		chooseLocationButton_.setEnabled(!runnerActive_);
+		listChannels_.setEnabled(!runnerActive_);
 	}
 
 	/**
@@ -410,7 +514,6 @@ public class TargaAcqWindow extends JFrame {
 	protected void applySettingsFromUI() {
 		acqName_ = tbName_.getText().replaceAll("[/\\\\*!':]", "-").trim();
 		dataDir_ = tbLocation_.getText().trim();
-		timeLapse_ = cbTimeLapse_.isSelected();
 		try {
 			timePoints_ = Integer.parseInt(tbTimePoints_.getText());
 		} catch(NumberFormatException e) {
@@ -466,6 +569,25 @@ public class TargaAcqWindow extends JFrame {
 			dataDir_ = result.getAbsolutePath().trim();
 			tbLocation_.setText(dataDir_);
 		}
+	}
+
+	/**
+	 * Acquisition completed event handler
+	 */
+	@Override
+	public void notifyWorkCompleted() {
+		runnerActive_ = false;
+		updateFormState();
+		updateChannelCommands();
+	}
+
+	/**
+	 * Acquisition status update event handler
+	 */
+	@Override
+	public void notifyStatusUpdate(int curr, int total) {
+		int perc = (int)Math.ceil(100.0 * (double)curr / total);
+		progressBar_.setString(String.format("%d / %d (%d%%)", curr, total, perc));
 	}
 
 	/**
