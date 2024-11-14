@@ -10,11 +10,11 @@ import org.scijava.plugin.SciJavaPlugin;
  * @author Milos Jovanovic <milos@tehnocad.rs>
  */
 @Plugin(type = MenuPlugin.class)
-public class TargaAcqPlugin implements MenuPlugin, SciJavaPlugin {
+public class TargaPlugin implements MenuPlugin, SciJavaPlugin {
 	public static final String VERSION_INFO = "1.0.0";
-	private static final String COPYRIGHT_NOTICE = "Copyright (C) by Lumencor LLC, 2024";
-	private static final String DESCRIPTION = "Image acquisition for Lumencor Targa";
-	private static final String NAME = "Targa Acquisition";
+	private static final String COPYRIGHT_NOTICE = "Copyright (C) by Lumencor, 2024";
+	private static final String DESCRIPTION = "Image acquisition for Targa Microscope";
+	private static final String NAME = "Targa";
 
 	private Studio studio_;
 	private TargaAcqWindow frame_;

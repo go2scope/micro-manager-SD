@@ -76,7 +76,7 @@ public class TargaAcqWindow extends JFrame implements AcqRunnerListener {
 				saveSettings();
 			}
 		});
-		super.setTitle("Targa Acquisition " + TargaAcqPlugin.VERSION_INFO);
+		super.setTitle("Targa Acquisition " + TargaPlugin.VERSION_INFO);
 		super.setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/org/micromanager/icons/microscope.gif")));
 		super.setResizable(false);
 		super.setPreferredSize(new Dimension(800, 500));
