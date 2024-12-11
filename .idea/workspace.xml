@@ -5,9 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8d70e0f4-7781-4b5f-9d75-346b9df5f083" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/coretest/StorageTest/src/AcqTestBackend.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/micro-manager-SD.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/micro-manager-SD.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plugins/Targa/src/main/java/com/lumencor/targa/TargaPlugin.java" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/Targa/src/main/java/com/lumencor/targa/TargaPlugin.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -33,35 +33,56 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Application.MicroManager.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;targa/acqplugin/refactor-structure&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;H:/projects/micro-manager-lum&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon&quot;: &quot;&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.AcqTest.executor": "Run",
+    "Application.AcqTestBck.executor": "Run",
+    "Application.MicroManager.executor": "Run",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "git-widget-placeholder": "mmstorage-draft",
+    "ignore.virus.scanning.warn.message": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "H:/projects/micro-manager-SD/stage/Release/x64",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon": "",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "settings.editor.selected.configurable": "editor.preferences.fonts.default",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="" />
       <recent name="org.micromanager.data.internal.mmcstore" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Application.AcqTest">
+    <configuration name="AcqTest" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" value="AcqTest" />
+      <module name="micro-manager-SD" />
+      <option name="PROGRAM_PARAMETERS" value="bigtiff D:\AcquisitionData\g2sStorage 4 5 1 0 0 demo" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/stage/Release/x64" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="AcqTestBck" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" value="AcqTestBackend" />
+      <module name="micro-manager-SD" />
+      <option name="PROGRAM_PARAMETERS" value="bigtiff D:\AcquisitionData\g2sStorage 4 5 1 0 0 demo" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/stage/Release/x64" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="MicroManager" type="Application" factoryName="Application">
       <option name="MAIN_CLASS_NAME" value="ij.ImageJ" />
       <module name="micro-manager-SD" />
@@ -71,12 +92,17 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <list>
+      <item itemvalue="Application.AcqTest" />
+      <item itemvalue="Application.AcqTestBck" />
+      <item itemvalue="Application.MicroManager" />
+    </list>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-9823dce3aa75-28b599e66164-intellij.indexing.shared.core-IU-242.23726.103" />
-        <option value="bundled-js-predefined-d6986cc7102b-5c90d61e3bab-JavaScript-IU-242.23726.103" />
+        <option value="bundled-jdk-9823dce3aa75-28b599e66164-intellij.indexing.shared.core-IU-242.24807.4" />
+        <option value="bundled-js-predefined-d6986cc7102b-5c90d61e3bab-JavaScript-IU-242.24807.4" />
       </set>
     </attachedChunks>
   </component>
@@ -117,6 +143,7 @@
       <workItem from="1731700520386" duration="11000" />
       <workItem from="1731980758283" duration="4327000" />
       <workItem from="1731986394017" duration="5000" />
+      <workItem from="1733856792635" duration="4383000" />
     </task>
     <servers />
   </component>
@@ -148,5 +175,9 @@
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>

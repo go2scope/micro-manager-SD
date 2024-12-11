@@ -2,15 +2,15 @@
 <module type="JAVA_MODULE" version="4">
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
+    <content url="file://$MODULE_DIR$/coretest">
+      <sourceFolder url="file://$MODULE_DIR$/coretest/StorageTest/src" isTestSource="false" />
+    </content>
     <content url="file://$MODULE_DIR$/mmstudio/src">
       <sourceFolder url="file://$MODULE_DIR$/mmstudio/src/main/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/mmstudio/src/test/java" isTestSource="false" />
     </content>
     <content url="file://$MODULE_DIR$/plugins/HCS">
       <sourceFolder url="file://$MODULE_DIR$/plugins/HCS/src/main/java" isTestSource="false" />
-    </content>
-    <content url="file://$MODULE_DIR$/plugins/Targa">
-      <sourceFolder url="file://$MODULE_DIR$/plugins/Targa/src/main/java/com" isTestSource="false" packagePrefix="org" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
