@@ -96,7 +96,7 @@ public class G2SWriteTest {
             shape.add(numberOfChannels); // channels
             shape.add(h); // second dimension y
             shape.add(w); // first dimension x
-            String handle = core.createDataset(savelocation, "test-" + storageengine, shape, type, "");
+            String handle = core.createDataset(savelocation, "test-" + storageengine, shape, type, "", 0);
 
             core.logMessage("Dataset UID: " + handle);
             core.logMessage("START OF ACQUISITION");
@@ -134,7 +134,7 @@ public class G2SWriteTest {
                         // add image to stream
                         double imgSizeMb = 2.0 * w * h / (1024.0 * 1024.0);
                         long startSaveNs = System.nanoTime();
-                        core.addImage(handle, bb.array().length, bb.array(), coords, img.tags.toString());
+                        core.appendImageToDataset(handle, bb.array().length, bb.array(), img.tags.toString(), img.tags.toString().length());
                         double imgSaveTimeMs = (System.nanoTime() - startSaveNs)/1.0e6;
                         double bw = imgSizeMb / (imgSaveTimeMs / 1.0e3);
                         imgSaveTimeSumMs += imgSaveTimeMs;

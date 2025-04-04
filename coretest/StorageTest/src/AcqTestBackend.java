@@ -118,7 +118,7 @@ public class AcqTestBackend {
             shape.add(h); // second dimension y
             shape.add(w); // first dimension x
             long start = System.nanoTime();
-            String handle = core.createDataset(savelocation, "test-back" + storageengine, shape, type, "");
+            String handle = core.createDataset(savelocation, "test-back" + storageengine, shape, type, "", 0);
             long endCreate = System.nanoTime();
 
             core.logMessage("Dataset UID: " + handle);
@@ -157,7 +157,7 @@ public class AcqTestBackend {
                         meta.put("Image-index", imgind);
                         long startSave = System.nanoTime();
                         // fetch and save the image
-                        core.saveNextImage(handle, coords, meta.toString());
+                        core.appendNextToDataset(handle, coords, meta.toString(), meta.toString().length());
                         long endSave = System.nanoTime();
 
                         // Calculate image statistics

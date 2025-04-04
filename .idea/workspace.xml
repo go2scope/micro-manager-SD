@@ -6,6 +6,14 @@
   <component name="ChangeListManager">
     <list default="true" id="8d70e0f4-7781-4b5f-9d75-346b9df5f083" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/coretest/StorageTest/src/AcqTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/coretest/StorageTest/src/AcqTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/coretest/StorageTest/src/AcqTestBackend.java" beforeDir="false" afterPath="$PROJECT_DIR$/coretest/StorageTest/src/AcqTestBackend.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/coretest/StorageTest/src/G2SReadTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/coretest/StorageTest/src/G2SReadTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/coretest/StorageTest/src/G2SWriteTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/coretest/StorageTest/src/G2SWriteTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mmCoreAndDevices" beforeDir="false" afterPath="$PROJECT_DIR$/mmCoreAndDevices" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mmCoreAndDevices/Tests/G2SStorageTest/G2SAcqTest.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/mmCoreAndDevices/Tests/G2SStorageTest/G2SAcqTest.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mmCoreAndDevices/Tests/G2SStorageTest/G2SWriterTest.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/mmCoreAndDevices/Tests/G2SStorageTest/G2SWriterTest.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/mmcstore/MMCStorageAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/mmcstore/MMCStorageAdapter.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -99,8 +107,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-9823dce3aa75-28b599e66164-intellij.indexing.shared.core-IU-242.24807.4" />
-        <option value="bundled-js-predefined-d6986cc7102b-5c90d61e3bab-JavaScript-IU-242.24807.4" />
+        <option value="bundled-jdk-9823dce3aa75-a94e463ab2e7-intellij.indexing.shared.core-IU-243.26053.27" />
+        <option value="bundled-js-predefined-d6986cc7102b-1632447f56bf-JavaScript-IU-243.26053.27" />
       </set>
     </attachedChunks>
   </component>
@@ -143,6 +151,7 @@
       <workItem from="1731986394017" duration="5000" />
       <workItem from="1733856792635" duration="5218000" />
       <workItem from="1733950890689" duration="8744000" />
+      <workItem from="1743806121543" duration="675000" />
     </task>
     <servers />
   </component>

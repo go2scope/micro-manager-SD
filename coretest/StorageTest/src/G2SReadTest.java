@@ -83,7 +83,7 @@ public class G2SReadTest {
                     calcCoordsRandom(i, shape, coords);
 
                 startRead = System.nanoTime();
-                Object img = core.getImage(handle, coords);
+                Object img = core.getImageFromDataset(handle, coords);
                 long imgReadTime = System.nanoTime() - startRead;
                 if (img == null) {
                     System.out.println("Failed to fetch image " + i);
@@ -105,7 +105,7 @@ public class G2SReadTest {
                     System.out.printf("Image %3d, %s size: %.1f MB, in %4.1f ms -> %6.1f MB/s%n", i, Arrays.toString(intCoords), isizemb, imgReadTime / 1000000.0, bw);
                 }
 
-                String meta = core.getImageMeta(handle, coords);
+                String meta = core.getDatasetImageMeta(handle, coords);
                 if(printmeta)
                     System.out.println("Image metadata: " + meta);
             }

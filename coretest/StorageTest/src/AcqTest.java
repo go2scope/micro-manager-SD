@@ -119,7 +119,7 @@ public class AcqTest {
             shape.add(h); // second dimension y
             shape.add(w); // first dimension x
             long start = System.nanoTime();
-            String handle = core.createDataset(savelocation, "test-" + storageengine, shape, type, "");
+            String handle = core.createDataset(savelocation, "test-" + storageengine, shape, type, "", 0);
             long endCreate = System.nanoTime();
 
             core.logMessage("Dataset UID: " + handle);
@@ -164,7 +164,7 @@ public class AcqTest {
                         // add image to stream
                         short[] bx = (short[]) img.pix;
                         long startSave = System.nanoTime();
-                        core.addImage(handle, bx.length, bx, coords, img.tags.toString());
+                        core.appendImageToDataset(handle, bx.length, bx, img.tags.toString(), img.tags.toString().length());
                         long endSave = System.nanoTime();
 
                         // Calculate image statistics

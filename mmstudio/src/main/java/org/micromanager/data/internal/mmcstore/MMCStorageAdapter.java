@@ -139,7 +139,7 @@ public class MMCStorageAdapter implements Storage {
                  store.getName(),
                  dimensions,
                  StorageDataType.StorageDataType_GRAY16,
-                 summaryMDString);
+                 summaryMDString, summaryMDString.length());
       } catch (Exception e) {
          throw new RuntimeException(e);
       }
@@ -177,7 +177,7 @@ public class MMCStorageAdapter implements Storage {
               ((DefaultMetadata) image.getMetadata()).toPropertyMap());
       try {
          LongVector coordinates = calcCoords(coords);
-         mmcStorage.addImage(dsHandle, image.getByteArray().length, image.getByteArray(), coordinates, mdString);
+         mmcStorage.appendImageToDataset(dsHandle, image.getByteArray().length, image.getByteArray(), mdString, mdString.length());
       } catch (Exception e) {
          throw new RuntimeException(e);
       }
@@ -199,7 +199,7 @@ public class MMCStorageAdapter implements Storage {
          return null;
       LongVector cdx = calcCoords(coords);
       try {
-         TaggedImage img = (TaggedImage) mmcStorage.getImage(dsHandle, cdx);
+         TaggedImage img = (TaggedImage) mmcStorage.getImageFromDataset(dsHandle, cdx);
          return new DefaultImage(img);
          // TODO: implement this
       }
