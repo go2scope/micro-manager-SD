@@ -96,7 +96,7 @@ public class G2SWriteTest {
             shape.add(numberOfChannels); // channels
             shape.add(h); // second dimension y
             shape.add(w); // first dimension x
-            String handle = core.createDataset(savelocation, "test-" + storageengine, shape, type, "", 0);
+            int handle = core.createDataset(savelocation, "test-" + storageengine, shape, type, "", 0);
 
             core.logMessage("Dataset UID: " + handle);
             core.logMessage("START OF ACQUISITION");

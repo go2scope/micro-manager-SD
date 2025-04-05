@@ -56,7 +56,7 @@ public class G2SReadTest {
                 core.setProperty(store, "DirectIO", directio ? 1 : 0);
 
             long startRead = System.currentTimeMillis();
-            String handle = core.loadDataset(readDir + "/" + datasetName);
+            int handle = core.loadDataset(readDir + "/" + datasetName);
             long dsReadTime = System.currentTimeMillis() - startRead;
             mmcorej.LongVector shape = core.getDatasetShape(handle);
             mmcorej.StorageDataType type = core.getDatasetPixelType(handle);

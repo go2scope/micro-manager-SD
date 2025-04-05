@@ -119,7 +119,7 @@ public class AcqTest {
             shape.add(h); // second dimension y
             shape.add(w); // first dimension x
             long start = System.nanoTime();
-            String handle = core.createDataset(savelocation, "test-" + storageengine, shape, type, "", 0);
+            int handle = core.createDataset(savelocation, "test-" + storageengine, shape, type, "", 0);
             long endCreate = System.nanoTime();
 
             core.logMessage("Dataset UID: " + handle);

@@ -9,10 +9,6 @@
       <change beforePath="$PROJECT_DIR$/coretest/StorageTest/src/AcqTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/coretest/StorageTest/src/AcqTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/coretest/StorageTest/src/AcqTestBackend.java" beforeDir="false" afterPath="$PROJECT_DIR$/coretest/StorageTest/src/AcqTestBackend.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/coretest/StorageTest/src/G2SReadTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/coretest/StorageTest/src/G2SReadTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/coretest/StorageTest/src/G2SWriteTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/coretest/StorageTest/src/G2SWriteTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmCoreAndDevices" beforeDir="false" afterPath="$PROJECT_DIR$/mmCoreAndDevices" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmCoreAndDevices/Tests/G2SStorageTest/G2SAcqTest.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/mmCoreAndDevices/Tests/G2SStorageTest/G2SAcqTest.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmCoreAndDevices/Tests/G2SStorageTest/G2SWriterTest.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/mmCoreAndDevices/Tests/G2SStorageTest/G2SWriterTest.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/mmcstore/MMCStorageAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/mmstudio/src/main/java/org/micromanager/data/internal/mmcstore/MMCStorageAdapter.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -151,7 +147,7 @@
       <workItem from="1731986394017" duration="5000" />
       <workItem from="1733856792635" duration="5218000" />
       <workItem from="1733950890689" duration="8744000" />
-      <workItem from="1743806121543" duration="675000" />
+      <workItem from="1743806121543" duration="2241000" />
     </task>
     <servers />
   </component>

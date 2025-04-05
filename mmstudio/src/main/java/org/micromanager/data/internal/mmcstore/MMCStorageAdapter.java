@@ -24,10 +24,10 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class MMCStorageAdapter implements Storage {
 
-   private CMMCore mmcStorage;
+   private final CMMCore mmcStorage;
    private final DefaultDatastore store;
    private SummaryMetadata summaryMetadata;
-   private String dsHandle = "";
+   private int dsHandle = -1;
    private String dataPath;
    private final ConcurrentHashMap<Coords, Image> writtenCoords = new ConcurrentHashMap<>();
 
@@ -106,7 +106,7 @@ public class MMCStorageAdapter implements Storage {
     * @param summary To push to the storage.
     */
    public void setSummaryMetadata(SummaryMetadata summary) {
-     if (!dsHandle.isEmpty())
+     if (dsHandle != -1)
         throw new IllegalStateException("Cannot set summary metadata after dataset is created");
       summaryMetadata = summary;
       Coords coordinates = summaryMetadata.getIntendedDimensions();
@@ -161,7 +161,7 @@ public class MMCStorageAdapter implements Storage {
       int width = image.getHeight();
       int height = image.getWidth();
 
-      if (dsHandle.isEmpty()) {
+      if (dsHandle == -1) {
          throw new RuntimeException("Cannot put image before dataset is created");
       }
       boolean rgb = image.getNumComponents() > 1;
@@ -309,7 +309,7 @@ public class MMCStorageAdapter implements Storage {
 
    @Override
    public int getNumImages() {
-      if (dsHandle.isEmpty()) {
+      if (dsHandle == -1) {
          return 0;
       }
       try {
@@ -343,7 +343,7 @@ public class MMCStorageAdapter implements Storage {
     */
    private LongVector calcCoords(Coords coords) {
       LongVector normalizedCoordinates = new LongVector();
-      if(dsHandle.isEmpty())
+      if(dsHandle == -1)
          return normalizedCoordinates; // empty vector
 
       Coords dims = summaryMetadata.getIntendedDimensions();
@@ -367,7 +367,7 @@ public class MMCStorageAdapter implements Storage {
     * @return
     */
    private boolean hasCoords(Coords coords) {
-      if(dsHandle.isEmpty())
+      if(dsHandle == -1)
          return false;
       Coords dims = summaryMetadata.getIntendedDimensions();
       if(dims == null || dims.getAxes().isEmpty())
